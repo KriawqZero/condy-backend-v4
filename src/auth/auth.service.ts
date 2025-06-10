@@ -1,10 +1,11 @@
 import { ConflictException, Injectable } from '@nestjs/common';
+import { CreateEmpresaDto } from 'src/auth/dto/create-empresa';
 import { CreateSindicoDto } from 'src/auth/dto/create-sindico.dto';
 import { HasherService } from 'src/common/services/hasher.service';
 import { User, UserType } from 'src/user/entities/user.entity';
 import { UserRepository } from 'src/user/user.repository';
 
-export type CreateUserDto = CreateSindicoDto;
+export type CreateUserDto = CreateSindicoDto | CreateEmpresaDto;
 
 @Injectable()
 export class AuthService {

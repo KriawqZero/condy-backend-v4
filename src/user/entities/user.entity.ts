@@ -1,4 +1,4 @@
-import { JsonObject } from 'generated/client/runtime/library';
+import { JsonObject } from 'generated/prisma/runtime/library';
 import { UserInterface } from 'src/user/entities/user.interface';
 
 export interface SubsindicoInfo extends JsonObject {
@@ -11,7 +11,7 @@ export interface SubsindicoInfo extends JsonObject {
 export const UserType = {
   SINDICO_RESIDENTE: 'SINDICO_RESIDENTE',
   SINDICO_PROFISSIONAL: 'SINDICO_PROFISSIONAL',
-  ADMIN_IMOVEIS: 'ADMIN_IMOVEIS',
+  EMPRESA: 'EMPRESA',
   PRESTADOR: 'PRESTADOR',
   ADMIN_PLATAFORMA: 'ADMIN_PLATAFORMA',
 };

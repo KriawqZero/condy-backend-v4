@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -17,7 +17,7 @@ datasource db {
 enum UserType {
   SINDICO_RESIDENTE
   SINDICO_PROFISSIONAL
-  ADMIN_IMOVEIS
+  EMPRESA
   PRESTADOR
   ADMIN_PLATAFORMA
 }
