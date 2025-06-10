@@ -1,0 +1,210 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  SINDICO_RESIDENTE
+  SINDICO_PROFISSIONAL
+  ADMIN_IMOVEIS
+  PRESTADOR
+  ADMIN_PLATAFORMA
+}
+
+enum ChamadoStatus {
+  NOVO
+  A_CAMINHO
+  EM_ATENDIMENTO
+  CONCLUIDO
+}
+
+enum Prioridade {
+  BAIXA
+  MEDIA
+  ALTA
+}
+
+enum Escopo {
+  ORCAMENTO
+  SERVICO_IMEDIATO
+}
+
+enum UserStatus {
+  ATIVO
+  INATIVO
+  BLOQUEADO
+  PENDENTE
+  FALTA_DOCUMENTOS
+}
+
+model AceiteTermos {
+  id         Int      @id @default(autoincrement())
+  termo_url  String
+  user_id    Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relacionamentos
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("aceito_termos")
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  name            String
+  cpf_cnpj        String    @unique
+  whatsapp        String    @unique
+  email           String    @unique
+  password        String
+  user_type       UserType
+  data_nascimento DateTime?
+
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  status     UserStatus @default(PENDENTE)
+
+  // Campos específicos para síndicos
+  periodo_mandato_inicio DateTime?
+  periodo_mandato_fim    DateTime?
+  subsindico_info        Json?
+
+  // Campos específicos para empresas (Admin Imóveis/Prestadores)
+  nome_fantasia String?
+  razao_social  String?
+  cep           String?
+  endereco      String?
+  cidade        String?
+  uf            String?
+
+  // Relacionamentos
+  imoveis Imovel[]
+
+  chamados_criados    Chamado[] @relation("ChamadoCriador")
+  chamados_designados Chamado[] @relation("ChamadoProvider")
+
+  AceiteTermos AceiteTermos[]
+
+  @@map("users")
+}
+
+model Imovel {
+  id       Int    @id @default(autoincrement())
+  cep      String
+  endereco String
+  cidade   String
+  uf       String @db.VarChar(2)
+
+  quantidade_moradias Int
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  // Relacionamentos
+  gestor_id    Int
+  gestor       User          @relation(fields: [gestor_id], references: [id])
+  ativos       Ativo[]
+  chamados     Chamado[]
+  areas_comuns AreasComuns[]
+
+  @@map("imoveis")
+}
+
+model AreasComuns {
+  id         Int      @id @default(autoincrement())
+  nome       String
+  descricao  String?
+  anexos     Anexo[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relacionamentos
+  imovel_id Int
+  imovel    Imovel @relation(fields: [imovel_id], references: [id])
+
+  @@map("areas_comuns")
+}
+
+model Ativo {
+  id                  Int       @id @default(autoincrement())
+  asset_code          String    @unique // Código único global (00001, 00002, etc.)
+  descricao_ativo     String
+  local_instalacao    String
+  marca               String?
+  modelo              String?
+  data_instalacao     DateTime?
+  valor_compra        Decimal?  @db.Decimal(10, 2)
+  garantia            Boolean   @default(false)
+  garantia_validade   DateTime?
+  contrato_manutencao Boolean   @default(false)
+  contrato_validade   DateTime?
+
+  anexos     Anexo[] // URLs dos anexos
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relacionamentos
+  imovel_id Int
+  imovel    Imovel    @relation(fields: [imovel_id], references: [id], onDelete: Cascade)
+  chamados  Chamado[]
+
+  @@map("ativos")
+}
+
+model Chamado {
+  id                 Int    @id @default(autoincrement())
+  numero_chamado     String @unique // CH2025XXXXXX
+  descricao_ocorrido String
+
+  anexos Anexo[]
+
+  informacoes_adicionais String?
+  prioridade             Prioridade
+  escopo                 Escopo
+  status                 ChamadoStatus @default(NOVO)
+  created_at             DateTime      @default(now())
+  updated_at             DateTime      @updatedAt
+
+  // Relacionamentos
+  imovel_id Int
+  imovel    Imovel @relation(fields: [imovel_id], references: [id])
+
+  ativo_id Int?
+  ativo    Ativo? @relation(fields: [ativo_id], references: [id])
+
+  solicitante_id Int
+  solicitante    User @relation("ChamadoCriador", fields: [solicitante_id], references: [id])
+
+  assigned_provider_id Int?
+  assigned_provider    User? @relation("ChamadoProvider", fields: [assigned_provider_id], references: [id])
+
+  @@map("chamados")
+}
+
+model Anexo {
+  id         Int      @id @default(autoincrement())
+  url        String   @unique
+  title      String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relacionamentos
+  Chamado       Chamado      @relation(fields: [chamadoId], references: [id])
+  chamadoId     Int
+  Ativo         Ativo?       @relation(fields: [ativoId], references: [id])
+  ativoId       Int?
+  AreasComuns   AreasComuns? @relation(fields: [areasComunsId], references: [id])
+  areasComunsId Int?
+
+  @@map("anexos")
+}
