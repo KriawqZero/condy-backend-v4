@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  output   = "../generated/client"
 }
 
 datasource db {
@@ -49,50 +49,50 @@ enum UserStatus {
 }
 
 model AceiteTermos {
-  id         Int      @id @default(autoincrement())
-  termo_url  String
-  user_id    Int
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  termoUrl  String
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relacionamentos
-  user User @relation(fields: [user_id], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@map("aceito_termos")
 }
 
 model User {
-  id              Int       @id @default(autoincrement())
-  name            String
-  cpf_cnpj        String    @unique
-  whatsapp        String    @unique
-  email           String    @unique
-  password        String
-  user_type       UserType
-  data_nascimento DateTime?
+  id             Int       @id @default(autoincrement())
+  name           String
+  cpfCnpj        String    @unique
+  whatsapp       String    @unique
+  email          String    @unique
+  password       String
+  userType       UserType
+  dataNascimento DateTime?
 
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
-  status     UserStatus @default(PENDENTE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  status    UserStatus @default(PENDENTE)
 
   // Campos específicos para síndicos
-  periodo_mandato_inicio DateTime?
-  periodo_mandato_fim    DateTime?
-  subsindico_info        Json?
+  periodoMandatoInicio DateTime?
+  periodoMandatoFim    DateTime?
+  subsindicoInfo       Json?
 
   // Campos específicos para empresas (Admin Imóveis/Prestadores)
-  nome_fantasia String?
-  razao_social  String?
-  cep           String?
-  endereco      String?
-  cidade        String?
-  uf            String?
+  nomeFantasia String?
+  razaoSocial  String?
+  cep          String?
+  endereco     String?
+  cidade       String?
+  uf           String?
 
   // Relacionamentos
   imoveis Imovel[]
 
-  chamados_criados    Chamado[] @relation("ChamadoCriador")
-  chamados_designados Chamado[] @relation("ChamadoProvider")
+  chamadosCriados    Chamado[] @relation("ChamadoCriador")
+  chamadosDesignados Chamado[] @relation("ChamadoProvider")
 
   AceiteTermos AceiteTermos[]
 
@@ -107,96 +107,96 @@ model Imovel {
   uf       String @db.VarChar(2)
 
   quantidade_moradias Int
-  created_at          DateTime @default(now())
-  updated_at          DateTime @updatedAt
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   // Relacionamentos
-  gestor_id    Int
-  gestor       User          @relation(fields: [gestor_id], references: [id])
-  ativos       Ativo[]
-  chamados     Chamado[]
-  areas_comuns AreasComuns[]
+  gestorId    Int
+  gestor      User          @relation(fields: [gestorId], references: [id])
+  ativos      Ativo[]
+  chamados    Chamado[]
+  areasComuns AreasComuns[]
 
   @@map("imoveis")
 }
 
 model AreasComuns {
-  id         Int      @id @default(autoincrement())
-  nome       String
-  descricao  String?
-  anexos     Anexo[]
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  nome      String
+  descricao String?
+  anexos    Anexo[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relacionamentos
-  imovel_id Int
-  imovel    Imovel @relation(fields: [imovel_id], references: [id])
+  imovelId Int
+  imovel   Imovel @relation(fields: [imovelId], references: [id])
 
   @@map("areas_comuns")
 }
 
 model Ativo {
-  id                  Int       @id @default(autoincrement())
-  asset_code          String    @unique // Código único global (00001, 00002, etc.)
-  descricao_ativo     String
-  local_instalacao    String
-  marca               String?
-  modelo              String?
-  data_instalacao     DateTime?
-  valor_compra        Decimal?  @db.Decimal(10, 2)
-  garantia            Boolean   @default(false)
-  garantia_validade   DateTime?
-  contrato_manutencao Boolean   @default(false)
-  contrato_validade   DateTime?
+  id                 Int       @id @default(autoincrement())
+  assetCode          String    @unique // Código único global (00001, 00002, etc.)
+  descricaoAtivo     String
+  localInstalacao    String
+  marca              String?
+  modelo             String?
+  dataInstalacao     DateTime?
+  valorCompra        Decimal?  @db.Decimal(10, 2)
+  garantia           Boolean   @default(false)
+  garantiaValidade   DateTime?
+  contratoManutencao Boolean   @default(false)
+  contratoValidade   DateTime?
 
-  anexos     Anexo[] // URLs dos anexos
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  anexos    Anexo[] // URLs dos anexos
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relacionamentos
-  imovel_id Int
-  imovel    Imovel    @relation(fields: [imovel_id], references: [id], onDelete: Cascade)
-  chamados  Chamado[]
+  imovelId Int
+  imovel   Imovel    @relation(fields: [imovelId], references: [id], onDelete: Cascade)
+  chamados Chamado[]
 
   @@map("ativos")
 }
 
 model Chamado {
-  id                 Int    @id @default(autoincrement())
-  numero_chamado     String @unique // CH2025XXXXXX
-  descricao_ocorrido String
+  id                Int    @id @default(autoincrement())
+  numeroChamado     String @unique // CH2025XXXXXX
+  descricaoOcorrido String
 
   anexos Anexo[]
 
-  informacoes_adicionais String?
-  prioridade             Prioridade
-  escopo                 Escopo
-  status                 ChamadoStatus @default(NOVO)
-  created_at             DateTime      @default(now())
-  updated_at             DateTime      @updatedAt
+  informacoesAdicionais String?
+  prioridade            Prioridade
+  escopo                Escopo
+  status                ChamadoStatus @default(NOVO)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
 
   // Relacionamentos
-  imovel_id Int
-  imovel    Imovel @relation(fields: [imovel_id], references: [id])
+  imovelId Int
+  imovel   Imovel @relation(fields: [imovelId], references: [id])
 
-  ativo_id Int?
-  ativo    Ativo? @relation(fields: [ativo_id], references: [id])
+  ativoId Int?
+  ativo   Ativo? @relation(fields: [ativoId], references: [id])
 
-  solicitante_id Int
-  solicitante    User @relation("ChamadoCriador", fields: [solicitante_id], references: [id])
+  solicitanteId Int
+  solicitante   User @relation("ChamadoCriador", fields: [solicitanteId], references: [id])
 
-  assigned_provider_id Int?
-  assigned_provider    User? @relation("ChamadoProvider", fields: [assigned_provider_id], references: [id])
+  assignedProviderId Int?
+  assignedProvider   User? @relation("ChamadoProvider", fields: [assignedProviderId], references: [id])
 
   @@map("chamados")
 }
 
 model Anexo {
-  id         Int      @id @default(autoincrement())
-  url        String   @unique
-  title      String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  url       String   @unique
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relacionamentos
   Chamado       Chamado      @relation(fields: [chamadoId], references: [id])

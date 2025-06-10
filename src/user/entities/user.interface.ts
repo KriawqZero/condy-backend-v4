@@ -1,3 +1,4 @@
-import { User } from "../../../generated/prisma/client";
+import { User } from '../../../generated/prisma/client';
 
-export interface UserInterface extends User {}
+export type UserInterface = User;
+export type UserCreateInput = Omit<User, 'id' | 'createdAt' | 'updatedAt'>;

@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { CreateSindicoDto } from 'src/auth/dto/create-sindico.dto';
 import { AuthService } from './auth.service';
-import { CreateAuthDto } from './dto/create-sindico.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+
+type CreateAuthDto = CreateSindicoDto;
 
 @Controller('auth')
 export class AuthController {
@@ -9,9 +10,7 @@ export class AuthController {
 
   @Post()
   create(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.create(
-      createAuthDto
-    );
+    return this.authService.create(createAuthDto);
   }
 
   @Get()
@@ -24,13 +23,13 @@ export class AuthController {
     return this.authService.findOne(+id);
   }
 
-  @Patch(':id')
+  /*   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
     return this.authService.update(+id, updateAuthDto);
-  }
+  } */
 
-  @Delete(':id')
+  /*   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.authService.remove(+id);
-  }
+  } */
 }

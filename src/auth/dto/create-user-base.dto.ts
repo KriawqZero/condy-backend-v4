@@ -1,14 +1,14 @@
-import { IsDate, IsEmail, IsNotEmpty, IsString } from "class-validator";
-import { User } from "src/user/entities/user.entity";
+import { IsDate, IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { UserInterface } from 'src/user/entities/user.interface';
 
-export class CreateUserBase implements Partial<User> {
+export class CreateUserBase implements Partial<UserInterface> {
   @IsNotEmpty()
   @IsString()
   name: string;
 
   @IsNotEmpty()
-  @IsString() 
-  cpf_cnpj: string;
+  @IsString()
+  cpfCnpj: string;
 
   @IsNotEmpty()
   @IsString()
@@ -23,5 +23,5 @@ export class CreateUserBase implements Partial<User> {
   password: string;
 
   @IsDate()
-  data_nascimento?: Date | null;
+  dataNascimento?: Date | null;
 }
