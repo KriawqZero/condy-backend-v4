@@ -6,13 +6,13 @@ import { UserType } from 'src/user/entities/user.entity';
 import { UserRepository } from 'src/user/user.repository';
 
 export interface JwtPayload {
-  id: number;
+  id: string;
   email: string;
   userType: keyof typeof UserType;
 }
 
 export interface JwtResponse {
-  id: number;
+  id: string;
   name: string;
   email: string;
   userType: keyof typeof UserType;

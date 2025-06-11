@@ -25,7 +25,7 @@ export const UserStatus = {
 };
 
 export class User implements UserInterface {
-  id: number;
+  id: string;
   name: string;
   cpfCnpj: string;
   whatsapp: string;

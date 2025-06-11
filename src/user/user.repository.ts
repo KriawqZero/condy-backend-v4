@@ -29,7 +29,7 @@ export class UserRepository {
     };
   }
 
-  async findById(id: number): Promise<User | null> {
+  async findById(id: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) {
       return null;
@@ -90,7 +90,7 @@ export class UserRepository {
       subsindicoInfo: user.subsindicoInfo as SubsindicoInfo | null,
     }));
   }
-  async update(id: number, data: Partial<UserCreateInput>): Promise<User> {
+  async update(id: string, data: Partial<UserCreateInput>): Promise<User> {
     const existingUser = await this.findById(id);
     if (!existingUser) {
       throw new BadRequestException('User not found');

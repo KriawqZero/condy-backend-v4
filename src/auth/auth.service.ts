@@ -12,8 +12,8 @@ export class AuthService {
     private readonly hasherService: HasherService,
   ) {}
 
-  private async signToken(userId: number, userType: string): Promise<string> {
-    const payload = { sub: userId, userType };
+  private async signToken(userId: string, userType: string): Promise<string> {
+    const payload = { id: userId, email: '', userType };
     return await this.jwtService.signAsync(payload);
   }
 
@@ -44,11 +44,11 @@ export class AuthService {
     return await this.userRepository.findAll();
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     return await this.userRepository.findById(id);
   }
 
-  /*   remove(id: number) {
+  /*   remove(id: string) {
     return this.userRepository.remove(id);
   } */
 }
