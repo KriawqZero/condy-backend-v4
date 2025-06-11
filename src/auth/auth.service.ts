@@ -1,18 +1,21 @@
 import { ConflictException, Injectable } from '@nestjs/common';
-import { CreateEmpresaDto } from 'src/auth/dto/create-empresa';
-import { CreateSindicoDto } from 'src/auth/dto/create-sindico.dto';
+import { JwtService } from '@nestjs/jwt';
+import { CreateUserDto } from 'src/auth/dto/create-user-dto';
 import { HasherService } from 'src/common/services/hasher.service';
-import { User, UserType } from 'src/user/entities/user.entity';
 import { UserRepository } from 'src/user/user.repository';
-
-export type CreateUserDto = CreateSindicoDto | CreateEmpresaDto;
 
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly jwtService: JwtService,
     private readonly userRepository: UserRepository,
     private readonly hasherService: HasherService,
   ) {}
+
+  private async signToken(userId: number, userType: string): Promise<string> {
+    const payload = { sub: userId, userType };
+    return await this.jwtService.signAsync(payload);
+  }
 
   async create(dto: CreateUserDto) {
     const existingEmail = await this.userRepository.findByEmail(dto.email);
@@ -27,9 +30,8 @@ export class AuthService {
 
     const hashedPassword = await this.hasherService.hashPassword(dto.password);
 
-    const userData: Partial<User> = {
+    const userData: CreateUserDto = {
       ...dto,
-      userType: UserType[dto.userType],
       password: hashedPassword,
     };
 

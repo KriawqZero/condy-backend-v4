@@ -16,7 +16,6 @@ export class HasherService {
    * @returns A promise that resolves to the hashed password.
    */
   async hashPassword(password: string): Promise<string> {
-    console.log("Hash ", this.saltRounds,  password)
     return await bc.hash(password, this.saltRounds);
   }
 

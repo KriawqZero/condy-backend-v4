@@ -1,4 +1,6 @@
-import { IsDate, IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsDate, IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsCpfCnpjConformeUsertype } from 'src/auth/dto/validators/cpfCnpj';
 import { UserInterface } from 'src/user/entities/user.interface';
 
 export class CreateUserBase implements Partial<UserInterface> {
@@ -8,6 +10,7 @@ export class CreateUserBase implements Partial<UserInterface> {
 
   @IsNotEmpty()
   @IsString()
+  @IsCpfCnpjConformeUsertype({ message: 'CPF ou CNPJ inválido conforme tipo de usuário' })
   cpfCnpj: string;
 
   @IsNotEmpty()
@@ -22,6 +25,8 @@ export class CreateUserBase implements Partial<UserInterface> {
   @IsString()
   password: string;
 
+  @IsOptional()
   @IsDate()
+  @Type(() => Date)
   dataNascimento?: Date | null;
 }

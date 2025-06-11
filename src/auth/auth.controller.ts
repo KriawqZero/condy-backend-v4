@@ -1,15 +1,13 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { CreateSindicoDto } from 'src/auth/dto/create-sindico.dto';
+import { CreateUserDto } from 'src/auth/dto/create-user-dto';
 import { AuthService } from './auth.service';
-
-type CreateAuthDto = CreateSindicoDto;
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post()
-  create(@Body() createAuthDto: CreateAuthDto) {
+  create(@Body() createAuthDto: CreateUserDto) {
     return this.authService.create(createAuthDto);
   }
 
