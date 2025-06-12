@@ -51,7 +51,7 @@ enum UserStatus {
 model AceiteTermos {
   id        Int      @id @default(autoincrement())
   termoUrl  String
-  userId    Int
+  userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -62,7 +62,7 @@ model AceiteTermos {
 }
 
 model User {
-  id             Int       @id @default(autoincrement())
+  id             String    @id @default(uuid())
   name           String
   cpfCnpj        String    @unique
   whatsapp       String    @unique
@@ -104,14 +104,18 @@ model Imovel {
   cep      String
   endereco String
   cidade   String
+  bairro   String
+  numero   String
   uf       String @db.VarChar(2)
+
+  complemento String?
 
   quantidade_moradias Int
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   // Relacionamentos
-  gestorId    Int
+  gestorId    String
   gestor      User          @relation(fields: [gestorId], references: [id])
   ativos      Ativo[]
   chamados    Chamado[]
@@ -182,11 +186,11 @@ model Chamado {
   ativoId Int?
   ativo   Ativo? @relation(fields: [ativoId], references: [id])
 
-  solicitanteId Int
-  solicitante   User @relation("ChamadoCriador", fields: [solicitanteId], references: [id])
+  solicitanteId String
+  solicitante   User   @relation("ChamadoCriador", fields: [solicitanteId], references: [id])
 
-  assignedProviderId Int?
-  assignedProvider   User? @relation("ChamadoProvider", fields: [assignedProviderId], references: [id])
+  prestadorAssignadoId String?
+  prestadorAssignado   User?   @relation("ChamadoProvider", fields: [prestadorAssignadoId], references: [id])
 
   @@map("chamados")
 }
