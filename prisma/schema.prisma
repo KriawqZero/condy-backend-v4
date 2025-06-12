@@ -104,7 +104,11 @@ model Imovel {
   cep      String
   endereco String
   cidade   String
+  bairro   String
+  numero   String
   uf       String @db.VarChar(2)
+
+  complemento String?
 
   quantidade_moradias Int
   createdAt           DateTime @default(now())
@@ -183,10 +187,10 @@ model Chamado {
   ativo   Ativo? @relation(fields: [ativoId], references: [id])
 
   solicitanteId String
-  solicitante   User @relation("ChamadoCriador", fields: [solicitanteId], references: [id])
+  solicitante   User   @relation("ChamadoCriador", fields: [solicitanteId], references: [id])
 
-  assignedProviderId String?
-  assignedProvider   User? @relation("ChamadoProvider", fields: [assignedProviderId], references: [id])
+  prestadorAssignadoId String?
+  prestadorAssignado   User?   @relation("ChamadoProvider", fields: [prestadorAssignadoId], references: [id])
 
   @@map("chamados")
 }

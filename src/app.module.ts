@@ -6,6 +6,9 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './database/prisma.module';
 import { UserModule } from './user/user.module';
+import { ChamadoModule } from './chamado/chamado.module';
+import { ImovelModule } from './imovel/imovel.module';
+import { ChamadoModule } from './chamado/chamado.module';
 
 @Module({
   imports: [
@@ -16,6 +19,8 @@ import { UserModule } from './user/user.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ChamadoModule,
+    ImovelModule,
   ],
   controllers: [AppController],
   providers: [AppService],
