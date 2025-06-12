@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ImovelService } from './imovel.service';
+import { ImovelRepository } from 'src/imovel/imovel.repository';
 import { ImovelController } from './imovel.controller';
+import { ImovelService } from './imovel.service';
 
 @Module({
   controllers: [ImovelController],
-  providers: [ImovelService],
+  providers: [ImovelService, ImovelRepository],
 })
 export class ImovelModule {}

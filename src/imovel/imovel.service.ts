@@ -1,26 +1,36 @@
 import { Injectable } from '@nestjs/common';
+import { Imovel } from 'src/imovel/entities/imovel.entity';
+import { ResponsePayloadWithMeta } from 'src/imovel/entities/imovel.interface';
+import { ImovelRepository } from 'src/imovel/imovel.repository';
 import { CreateImovelDto } from './dto/create-imovel.dto';
-import { UpdateImovelDto } from './dto/update-imovel.dto';
 
 @Injectable()
 export class ImovelService {
-  create(createImovelDto: CreateImovelDto) {
-    return 'This action adds a new imovel';
+  constructor(private readonly imovelRepository: ImovelRepository) {}
+  create(createImovelDto: CreateImovelDto): Promise<Imovel> {
+    return this.imovelRepository.create(createImovelDto);
   }
 
-  findAll() {
-    return `This action returns all imovel`;
+  async findAll(page: number = 1, limit: number = 10): Promise<ResponsePayloadWithMeta<Imovel[]>> {
+    const { items, meta } = await this.imovelRepository.findAll(page, limit);
+    return { items, meta };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} imovel`;
+  async findAllByUserId(id: string, page: number = 1, limit: number = 10): Promise<ResponsePayloadWithMeta<Imovel[]>> {
+    const { items, meta } = await this.imovelRepository.findAllByUserId(id, { page, limit });
+    return { items, meta };
   }
 
-  update(id: number, updateImovelDto: UpdateImovelDto) {
-    return `This action updates a #${id} imovel`;
+  /*
+  async findOne(id: number) {
+    return await this.imovelRepository.findOne(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} imovel`;
+  async update(id: number, updateImovelDto: UpdateImovelDto) {
+    return await this.imovelRepository.update(id, updateImovelDto);
   }
+
+  async remove(id: number) {
+    return await this.imovelRepository.remove(id);
+  }*/
 }

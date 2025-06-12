@@ -1,29 +1,34 @@
+import { AnexoInterface, ChamadoInterface } from 'src/chamado/entities/chamado.interface';
 import { ChamadoStatus, Escopo, Prioridade } from 'src/chamado/entities/types';
-import { Imovel } from 'src/imovel/entities/imovel.entity';
-import { User } from 'src/user/entities/user.entity';
 
-export class Anexo {
-  id: string;
+export class Anexo implements AnexoInterface {
+  id: number;
   url: string;
-  title: string;
+  title: string | null;
+
   createdAt: Date;
   updatedAt: Date;
+
+  chamadoId: number;
+  ativoId: number | null;
+  areasComunsId: number | null;
 }
 
-export class Chamado {
-  id: string;
+export class Chamado implements ChamadoInterface {
+  id: number;
   numeroChamado: string;
   descricaoOcorrido: string;
+  informacoesAdicionais: string | null;
 
-  anexos: Anexo[]; // Assuming Anexo is another entity
+  prioridade: keyof typeof Prioridade;
+  escopo: keyof typeof Escopo;
+  status: keyof typeof ChamadoStatus;
 
-  informacoesAdicionais: string;
-  prioridade: Prioridade;
-  escopo: Escopo;
-  status: ChamadoStatus;
+  imovelId: number;
+  solicitanteId: string;
+  ativoId: number | null;
+  prestadorAssignadoId: string | null;
 
-  imovel: Imovel;
-
-  solicitante: User;
-  prestadorAssignado?: User;
+  createdAt: Date;
+  updatedAt: Date;
 }

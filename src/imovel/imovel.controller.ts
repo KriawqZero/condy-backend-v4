@@ -1,9 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ImovelService } from './imovel.service';
+import { Body, Controller, Get, Post, Query, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { GetUser } from 'src/common/decorators/get-user.decorator';
+import { JwtGuard } from 'src/common/guards/jwt.guard';
+import { UserType } from 'src/user/entities/user.entity';
 import { CreateImovelDto } from './dto/create-imovel.dto';
-import { UpdateImovelDto } from './dto/update-imovel.dto';
+import { ImovelService } from './imovel.service';
 
 @Controller('imovel')
+@UseGuards(JwtGuard)
 export class ImovelController {
   constructor(private readonly imovelService: ImovelService) {}
 
@@ -13,10 +16,22 @@ export class ImovelController {
   }
 
   @Get()
-  findAll() {
-    return this.imovelService.findAll();
+  findAll(
+    @GetUser('userType') userType: string,
+    @GetUser('id') userId: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 10,
+  ) {
+    if (userType === UserType.ADMIN_PLATAFORMA) {
+      return this.imovelService.findAll(page, limit);
+    } else if (userType === UserType.SINDICO_RESIDENTE || userType === UserType.SINDICO_PROFISSIONAL) {
+      return this.imovelService.findAllByUserId(userId, page, limit);
+    } else {
+      throw new UnauthorizedException();
+    }
   }
 
+  /*
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.imovelService.findOne(+id);
@@ -30,5 +45,5 @@ export class ImovelController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.imovelService.remove(+id);
-  }
+  }*/
 }

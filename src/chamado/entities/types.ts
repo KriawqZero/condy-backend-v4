@@ -15,3 +15,7 @@ export enum ChamadoStatus {
   EM_ATENDIMENTO = 'EM_ATENDIMENTO',
   CONCLUIDO = 'CONCLUIDO',
 }
+
+export type ChamadoStatusType = ChamadoStatus;
+export type EscopoType = Escopo;
+export type PrioridadeType = Prioridade;

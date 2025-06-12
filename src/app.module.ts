@@ -4,11 +4,10 @@ import { CommonModule } from 'src/common/common.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { ChamadoModule } from './chamado/chamado.module';
 import { PrismaModule } from './database/prisma.module';
-import { UserModule } from './user/user.module';
-import { ChamadoModule } from './chamado/chamado.module';
 import { ImovelModule } from './imovel/imovel.module';
-import { ChamadoModule } from './chamado/chamado.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [

@@ -1,8 +1,7 @@
-import { Chamado } from 'src/chamado/entities/chamado.entity';
-import { User } from 'src/user/entities/user.entity';
+import { ImovelInterface } from 'src/imovel/entities/imovel.interface';
 
-export class Imovel {
-  id: string;
+export class Imovel implements ImovelInterface {
+  id: number;
 
   cep: string;
   endereco: string;
@@ -10,12 +9,12 @@ export class Imovel {
   bairro: string;
   numero: string;
   uf: string;
-
-  complemento?: string; // Optional field
+  complemento: string | null;
 
   quantidade_moradias: number;
 
-  gestor: User;
-  chamados: Chamado[];
-  // Additional fields can be added as needed
+  gestorId: string;
+
+  createdAt: Date;
+  updatedAt: Date;
 }
