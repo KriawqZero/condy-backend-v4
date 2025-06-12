@@ -14,7 +14,7 @@ export class UserRepository {
     }
     return {
       ...user,
-      subsindicoInfo: user.subsindicoInfo as SubsindicoInfo | null,
+      subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),
     };
   }
 
@@ -25,7 +25,7 @@ export class UserRepository {
     }
     return {
       ...user,
-      subsindicoInfo: user.subsindicoInfo as SubsindicoInfo | null,
+      subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),
     };
   }
 
@@ -36,7 +36,7 @@ export class UserRepository {
     }
     return {
       ...user,
-      subsindicoInfo: user.subsindicoInfo as SubsindicoInfo | null,
+      subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),
     };
   }
 
@@ -44,6 +44,7 @@ export class UserRepository {
     if (!data.name) {
       throw new Error('Name is required');
     }
+
     const userData: UserCreateInput = {
       name: data.name,
       email: data.email!,
@@ -73,13 +74,14 @@ export class UserRepository {
         cpfCnpj: userData.cpfCnpj,
         whatsapp: userData.whatsapp,
         dataNascimento: userData.dataNascimento ?? null,
-        subsindicoInfo: data.subsindicoInfo ? JSON.parse(JSON.stringify(data.subsindicoInfo)) : null,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        subsindicoInfo: data.subsindicoInfo ? (data.subsindicoInfo as any) : null,
       },
     });
 
     return {
       ...user,
-      subsindicoInfo: user.subsindicoInfo as SubsindicoInfo | null,
+      subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),
     };
   }
 
@@ -87,9 +89,10 @@ export class UserRepository {
     const users = await this.prisma.user.findMany();
     return users.map(user => ({
       ...user,
-      subsindicoInfo: user.subsindicoInfo as SubsindicoInfo | null,
+      subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),
     }));
   }
+
   async update(id: string, data: Partial<UserCreateInput>): Promise<User> {
     const existingUser = await this.findById(id);
     if (!existingUser) {
@@ -106,15 +109,37 @@ export class UserRepository {
         cpfCnpj: data.cpfCnpj ?? existingUser.cpfCnpj,
         whatsapp: data.whatsapp ?? existingUser.whatsapp,
         dataNascimento: data.dataNascimento ?? existingUser.dataNascimento,
-        subsindicoInfo: data.subsindicoInfo
-          ? JSON.parse(JSON.stringify(data.subsindicoInfo))
-          : existingUser.subsindicoInfo,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        subsindicoInfo: data.subsindicoInfo ? (data.subsindicoInfo as any) : (existingUser.subsindicoInfo as any),
       },
     });
 
     return {
       ...user,
-      subsindicoInfo: user.subsindicoInfo as SubsindicoInfo | null,
+      subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),
     };
+  }
+
+  /**
+   * Converte o valor do banco de dados para o tipo SubsindicoInfo
+   */
+  private parseSubsindicoInfo(value: any): SubsindicoInfo | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value) as SubsindicoInfo;
+      } catch {
+        return null;
+      }
+    }
+
+    if (typeof value === 'object') {
+      return value as SubsindicoInfo;
+    }
+
+    return null;
   }
 }

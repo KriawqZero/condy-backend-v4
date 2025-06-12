@@ -21,8 +21,8 @@ export interface JwtResponse {
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    private config: ConfigService,
-    private userRepository: UserRepository,
+    config: ConfigService,
+    private readonly userRepository: UserRepository,
   ) {
     const jwtSecret = config.get<string>('JWT_SECRET');
     if (!jwtSecret) {
@@ -41,6 +41,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
     if (user.userType !== payload.userType) {
       throw new UnauthorizedException('User type mismatch');
+    }
+    if (user.email !== payload.email) {
+      throw new UnauthorizedException('Email mismatch');
     }
 
     return {

@@ -19,8 +19,8 @@ export class AuthService {
    * @param userType - The type of the user (e.g., 'admin', 'user').
    * @returns A signed JWT token.
    */
-  private async signToken(userId: string, userType: string): Promise<string> {
-    const payload = { id: userId, email: '', userType };
+  private async signToken(userId: string, userEmail: string, userType: string): Promise<string> {
+    const payload = { id: userId, email: userEmail, userType };
     return await this.jwtService.signAsync(payload);
   }
 
@@ -63,8 +63,8 @@ export class AuthService {
     };
 
     const user = await this.userRepository.create(userData);
-    
-    const token = await this.signToken(user.id, user.userType);
+
+    const token = await this.signToken(user.id, user.email, user.userType);
 
     if (!user) {
       throw new InternalServerErrorException('User could not be created');
@@ -87,7 +87,7 @@ export class AuthService {
         razaoSocial: user.razaoSocial,
       },
       token: token,
-    }
+    };
   }
 
   async login(dto: LoginDto) {
@@ -101,7 +101,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const token = await this.signToken(user.id, user.userType);
+    const token = await this.signToken(user.id, user.email, user.userType);
 
     return {
       user: {
