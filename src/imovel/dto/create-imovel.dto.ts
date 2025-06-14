@@ -33,8 +33,4 @@ export class CreateImovelDto {
   @IsInt()
   @IsNotEmpty()
   quantidade_moradias: number;
-
-  @IsString()
-  @IsNotEmpty()
-  gestorId: string; // ID do gestor responsável pelo imóvel
 }

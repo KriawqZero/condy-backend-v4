@@ -7,7 +7,7 @@ import { ImovelCreateInput, ResponsePayloadWithMeta } from 'src/imovel/entities/
 export class ImovelRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: Partial<ImovelCreateInput>): Promise<Imovel> {
+  async create(dto: Partial<ImovelCreateInput>, gestorId: string): Promise<Imovel> {
     return await this.prisma.imovel.create({
       data: {
         cep:
@@ -43,7 +43,7 @@ export class ImovelRepository {
         complemento: dto.complemento ?? null,
         quantidade_moradias: dto.quantidade_moradias ?? 0,
         gestor: {
-          connect: { id: dto.gestorId },
+          connect: { id: gestorId },
         },
       },
     });

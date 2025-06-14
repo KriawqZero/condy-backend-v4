@@ -17,6 +17,11 @@ export class AuthController {
     return { cpfCnpj: cpfCnpj, exists: await this.authService.checkCpfCnpjExists(cpfCnpj) };
   }
 
+  @Get('check-phone')
+  async checkPhoneExists(@Query('payload') phone: string) {
+    return { phone: phone, exists: await this.authService.checkPhoneExists(phone) };
+  }
+
   @Post()
   create(@Body() createAuthDto: CreateUserDto) {
     return this.authService.create(createAuthDto);

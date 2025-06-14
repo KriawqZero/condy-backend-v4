@@ -7,8 +7,8 @@ import { CreateImovelDto } from './dto/create-imovel.dto';
 @Injectable()
 export class ImovelService {
   constructor(private readonly imovelRepository: ImovelRepository) {}
-  create(createImovelDto: CreateImovelDto): Promise<Imovel> {
-    return this.imovelRepository.create(createImovelDto);
+  create(createImovelDto: CreateImovelDto, gestorId: string): Promise<Imovel> {
+    return this.imovelRepository.create(createImovelDto, gestorId);
   }
 
   async findAll(page: number = 1, limit: number = 10): Promise<ResponsePayloadWithMeta<Imovel[]>> {

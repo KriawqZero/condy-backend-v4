@@ -40,6 +40,17 @@ export class UserRepository {
     };
   }
 
+  async findByPhone(phone: string): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({ where: { whatsapp: phone } });
+    if (!user) {
+      return null;
+    }
+    return {
+      ...user,
+      subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),
+    };
+  }
+
   async create(data: Partial<UserCreateInput>): Promise<User> {
     if (!data.name) {
       throw new Error('Name is required');

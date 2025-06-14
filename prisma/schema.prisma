@@ -101,6 +101,7 @@ model User {
 
 model Imovel {
   id       Int    @id @default(autoincrement())
+  gestorId String
   cep      String
   endereco String
   cidade   String
@@ -115,7 +116,6 @@ model Imovel {
   updatedAt           DateTime @updatedAt
 
   // Relacionamentos
-  gestorId    String
   gestor      User          @relation(fields: [gestorId], references: [id])
   ativos      Ativo[]
   chamados    Chamado[]

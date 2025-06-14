@@ -11,6 +11,10 @@ export class UserService {
     return await this.userRepository.create(createUserDto);
   }
 
+  async findById(id: string) {
+    return await this.userRepository.findById(id);
+  }
+
   async findAll() {
     return await this.userRepository.findAll();
   }

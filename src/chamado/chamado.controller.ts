@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { JwtGuard } from 'src/common/guards/jwt.guard';
 import { ChamadoService } from './chamado.service';
 import { CreateChamadoDto } from './dto/create-chamado.dto';
@@ -10,8 +11,8 @@ export class ChamadoController {
   constructor(private readonly chamadoService: ChamadoService) {}
 
   @Post()
-  create(@Body() createChamadoDto: CreateChamadoDto) {
-    return this.chamadoService.create(createChamadoDto);
+  create(@Body() createChamadoDto: CreateChamadoDto, @GetUser('id') solicitanteId: string) {
+    return this.chamadoService.create(createChamadoDto, solicitanteId);
   }
 
   @Get()

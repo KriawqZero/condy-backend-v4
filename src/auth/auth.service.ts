@@ -44,6 +44,16 @@ export class AuthService {
     return user !== null;
   }
 
+  /**
+   * Checks if the phone number already exists in the database.
+   * @param phone - The phone number to check.
+   * @returns True if the phone number exists, false otherwise.
+   */
+  async checkPhoneExists(phone: string): Promise<boolean> {
+    const user = await this.userRepository.findByPhone(phone);
+    return user !== null;
+  }
+
   async create(dto: CreateUserDto) {
     const existingEmail = await this.checkEmailExists(dto.email);
     if (existingEmail) {
@@ -53,6 +63,11 @@ export class AuthService {
     const existingCpfCnpj = await this.checkCpfCnpjExists(dto.cpfCnpj);
     if (existingCpfCnpj) {
       throw new ConflictException('CPF/CNPJ already exists');
+    }
+
+    const existingPhone = await this.checkPhoneExists(dto.whatsapp);
+    if (existingPhone) {
+      throw new ConflictException('Phone number already exists');
     }
 
     const hashedPassword = await this.hasherService.hashPassword(dto.password);

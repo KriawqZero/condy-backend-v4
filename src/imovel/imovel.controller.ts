@@ -11,8 +11,8 @@ export class ImovelController {
   constructor(private readonly imovelService: ImovelService) {}
 
   @Post()
-  create(@Body() createImovelDto: CreateImovelDto) {
-    return this.imovelService.create(createImovelDto);
+  create(@Body() createImovelDto: CreateImovelDto, @GetUser('id') gestorId: string) {
+    return this.imovelService.create(createImovelDto, gestorId);
   }
 
   @Get()
