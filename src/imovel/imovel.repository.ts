@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
+import { paginate, ResponsePayloadWithMeta } from 'src/common/pagination';
 import { PrismaService } from 'src/database/prisma.service';
 import { Imovel } from 'src/imovel/entities/imovel.entity';
-import { ImovelCreateInput, ResponsePayloadWithMeta } from 'src/imovel/entities/imovel.interface';
+import { ImovelCreateInput } from 'src/imovel/entities/imovel.interface';
 
 @Injectable()
 export class ImovelRepository {
@@ -50,50 +51,38 @@ export class ImovelRepository {
   }
 
   async findAll(page: number = 1, limit: number = 10): Promise<ResponsePayloadWithMeta<Imovel[]>> {
-    const skip = (page - 1) * limit;
-    const [data, total] = await Promise.all([
-      this.prisma.imovel.findMany({
-        skip,
-        take: limit,
-      }),
-      this.prisma.imovel.count(),
-    ]);
-
-    return {
-      items: data,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+    return paginate(
+      () =>
+        this.prisma.imovel.findMany({
+          skip: (page - 1) * limit,
+          take: limit,
+        }),
+      () => this.prisma.imovel.count(),
+      page,
+      limit,
+    );
   }
 
   async findAllByUserId(
     id: string,
     query: { page: number; limit: number } = { page: 1, limit: 10 },
   ): Promise<ResponsePayloadWithMeta<Imovel[]>> {
-    const skip = (query.page - 1) * query.limit;
-    const where = { gestorId: id };
+    return paginate(
+      () =>
+        this.prisma.imovel.findMany({
+          where: { gestorId: id },
+          skip: (query.page - 1) * query.limit,
+          take: query.limit,
+        }),
+      () => this.prisma.imovel.count({ where: { gestorId: id } }),
+      query.page,
+      query.limit,
+    );
+  }
 
-    const [data, total] = await Promise.all([
-      this.prisma.imovel.findMany({
-        where,
-        skip,
-        take: query.limit,
-      }),
-      this.prisma.imovel.count({ where }),
-    ]);
-
-    return {
-      items: data,
-      meta: {
-        total,
-        page: query.page,
-        limit: query.limit,
-        totalPages: Math.ceil(total / query.limit),
-      },
-    };
+  async findById(id: number): Promise<Imovel | null> {
+    return await this.prisma.imovel.findUnique({
+      where: { id },
+    });
   }
 }

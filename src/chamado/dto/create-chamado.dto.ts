@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
-import { ChamadoStatus, Escopo, Prioridade } from 'src/chamado/entities/types';
+import { Escopo, Prioridade } from 'src/chamado/entities/types';
 
 export class CreateChamadoDto {
   @IsString()
@@ -21,8 +21,4 @@ export class CreateChamadoDto {
   @IsEnum(Escopo)
   @IsNotEmpty()
   escopo: Escopo;
-
-  @IsEnum(ChamadoStatus)
-  @IsNotEmpty()
-  status: ChamadoStatus;
 }

@@ -6,5 +6,6 @@ import { ImovelService } from './imovel.service';
 @Module({
   controllers: [ImovelController],
   providers: [ImovelService, ImovelRepository],
+  exports: [ImovelService],
 })
 export class ImovelModule {}

@@ -111,9 +111,9 @@ model Imovel {
 
   complemento String?
 
-  quantidade_moradias Int
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  quantidadeMoradias Int
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   // Relacionamentos
   gestor      User          @relation(fields: [gestorId], references: [id])
@@ -172,6 +172,7 @@ model Chamado {
 
   anexos Anexo[]
 
+  valorEstimado         Decimal?      @db.Decimal(10, 2)
   informacoesAdicionais String?
   prioridade            Prioridade    @default(MEDIA)
   escopo                Escopo        @default(ORCAMENTO)

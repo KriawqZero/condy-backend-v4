@@ -8,6 +8,7 @@ import { ChamadoModule } from './chamado/chamado.module';
 import { PrismaModule } from './database/prisma.module';
 import { ImovelModule } from './imovel/imovel.module';
 import { UserModule } from './user/user.module';
+import { AnexoModule } from './anexo/anexo.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UserModule } from './user/user.module';
     }),
     ChamadoModule,
     ImovelModule,
+    AnexoModule,
   ],
   controllers: [AppController],
   providers: [AppService],

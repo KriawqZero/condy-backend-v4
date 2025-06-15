@@ -16,13 +16,13 @@ export class ChamadoController {
   }
 
   @Get()
-  findAll() {
-    return this.chamadoService.findAll();
+  findAll(@GetUser('id') userId: string) {
+    return this.chamadoService.findAll(userId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.chamadoService.findOne(+id);
+  findOne(@Param('id') id: string, @GetUser('id') userId: string) {
+    return this.chamadoService.findOne(+id, userId);
   }
 
   @Patch(':id')
