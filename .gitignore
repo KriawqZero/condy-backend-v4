@@ -12,6 +12,9 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+condy-backend-v4_accessKeys.csv
+condy-backend-v4_credentials.csv
+
 # OS
 .DS_Store
 

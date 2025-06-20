@@ -128,7 +128,7 @@ model AreasComuns {
   id        Int      @id @default(autoincrement())
   nome      String
   descricao String?
-  anexos    Anexo[]
+  //anexos    Anexo[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -153,7 +153,8 @@ model Ativo {
   contratoManutencao Boolean   @default(false)
   contratoValidade   DateTime?
 
-  anexos    Anexo[] // URLs dos anexos
+  //anexos    Anexo[] // URLs dos anexos
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -199,17 +200,14 @@ model Chamado {
 model Anexo {
   id        Int      @id @default(autoincrement())
   url       String   @unique
+  awsKey    String
   title     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relacionamentos
-  Chamado       Chamado      @relation(fields: [chamadoId], references: [id])
-  chamadoId     Int
-  Ativo         Ativo?       @relation(fields: [ativoId], references: [id])
-  ativoId       Int?
-  AreasComuns   AreasComuns? @relation(fields: [areasComunsId], references: [id])
-  areasComunsId Int?
+  Chamado   Chamado? @relation(fields: [chamadoId], references: [id])
+  chamadoId Int?
 
   @@map("anexos")
 }

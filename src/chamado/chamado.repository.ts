@@ -86,6 +86,11 @@ export class ChamadoRepository {
           where: {
             solicitanteId: userId,
           },
+          include: {
+            solicitante: true,
+            imovel: true,
+            anexos: true,
+          },
         }),
       () => this.prisma.chamado.count(),
     );
@@ -97,6 +102,7 @@ export class ChamadoRepository {
       include: {
         solicitante: true,
         imovel: true,
+        anexos: true,
       },
     });
   }

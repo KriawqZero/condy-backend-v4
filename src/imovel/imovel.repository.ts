@@ -42,7 +42,7 @@ export class ImovelRepository {
             throw new Error('UF é obrigatória');
           })(),
         complemento: dto.complemento ?? null,
-        quantidade_moradias: dto.quantidade_moradias ?? 0,
+        quantidadeMoradias: dto.quantidadeMoradias ?? 0,
         gestor: {
           connect: { id: gestorId },
         },

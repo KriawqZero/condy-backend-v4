@@ -1,4 +1,10 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateAnexoDto } from './create-anexo.dto';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class UpdateAnexoDto extends PartialType(CreateAnexoDto) {}
+export class UpdateAnexoDto {
+  @IsNumber()
+  chamadoId: number;
+
+  @IsOptional()
+  @IsString()
+  title?: string | null;
+}

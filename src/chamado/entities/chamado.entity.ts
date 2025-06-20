@@ -1,3 +1,4 @@
+import { Decimal } from 'generated/prisma/runtime/library';
 import { ChamadoInterface } from 'src/chamado/entities/chamado.interface';
 import { ChamadoStatus, Escopo, Prioridade } from 'src/chamado/entities/types';
 
@@ -6,6 +7,7 @@ export class Chamado implements ChamadoInterface {
   numeroChamado: string;
   descricaoOcorrido: string;
   informacoesAdicionais: string | null;
+  valorEstimado: Decimal | null;
 
   prioridade: keyof typeof Prioridade;
   escopo: keyof typeof Escopo;

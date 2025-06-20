@@ -11,7 +11,7 @@ export class Imovel implements ImovelInterface {
   uf: string;
   complemento: string | null;
 
-  quantidade_moradias: number;
+  quantidadeMoradias: number;
 
   gestorId: string;
 
