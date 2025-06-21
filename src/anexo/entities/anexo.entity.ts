@@ -10,4 +10,9 @@ export class Anexo implements AnexoInterface {
   updatedAt: Date;
 
   chamadoId: number | null;
+  Chamado?: {
+    id: number;
+    solicitanteId: string;
+    // other fields can be added as needed
+  } | null;
 }

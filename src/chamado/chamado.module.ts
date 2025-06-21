@@ -9,5 +9,6 @@ import { ChamadoService } from './chamado.service';
   imports: [UserModule, ImovelModule],
   controllers: [ChamadoController],
   providers: [ChamadoService, ChamadoRepository],
+  exports: [ChamadoRepository],
 })
 export class ChamadoModule {}

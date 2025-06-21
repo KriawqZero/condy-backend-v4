@@ -8,9 +8,25 @@ import { Anexo } from './entities/anexo.entity';
 export class AnexoRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
+  async findAll(userId: string): Promise<Anexo[]> {
+    return this.prismaService.anexo.findMany({
+      where: {
+        Chamado: {
+          solicitanteId: userId,
+        },
+      },
+      include: {
+        Chamado: true,
+      },
+    });
+  }
+
   async findOne(id: number): Promise<Anexo | null> {
     return this.prismaService.anexo.findUnique({
       where: { id },
+      include: {
+        Chamado: true,
+      },
     });
   }
 

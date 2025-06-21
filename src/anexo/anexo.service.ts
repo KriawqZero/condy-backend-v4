@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateAnexoDto } from 'src/anexo/dto/create-anexo.dto';
+import { ChamadoRepository } from 'src/chamado/chamado.repository';
 import { S3Service } from 'src/common/services/s3.service';
 import { AnexoRepository } from './anexo.repository';
 import { UpdateAnexoDto } from './dto/update-anexo.dto';
@@ -8,6 +9,7 @@ import { UpdateAnexoDto } from './dto/update-anexo.dto';
 export class AnexoService {
   constructor(
     private readonly anexoRepository: AnexoRepository,
+    private readonly chamadoRepository: ChamadoRepository,
     private readonly s3Service: S3Service,
   ) {}
 
@@ -25,15 +27,21 @@ export class AnexoService {
     });
   }
 
-  update(id: number, dto: UpdateAnexoDto) {
-    const anexo = this.anexoRepository.findOne(id);
+  async update(id: number, userId: string, dto: UpdateAnexoDto) {
+    const anexo = await this.anexoRepository.findOne(id);
     if (!anexo) throw new NotFoundException('Anexo not found');
+
+    const chamado = await this.chamadoRepository.findOneById(dto.chamadoId);
+    if (!chamado) throw new NotFoundException('Chamado not found');
+
+    if (chamado.solicitanteId !== userId)
+      throw new UnauthorizedException('You do not have permission to update this anexo');
 
     return this.anexoRepository.update(id, dto);
   }
 
-  findAll() {
-    return `This action returns all anexo`;
+  findAll(userId: string) {
+    return this.anexoRepository.findAll(userId);
   }
 
   findOne(id: number) {

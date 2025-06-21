@@ -15,6 +15,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { AnexoService } from 'src/anexo/anexo.service';
 import { CreateAnexoDto } from 'src/anexo/dto/create-anexo.dto';
 import { UpdateAnexoDto } from 'src/anexo/dto/update-anexo.dto';
+import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { JwtGuard } from 'src/common/guards/jwt.guard';
 
 @Controller('anexo')
@@ -33,8 +34,8 @@ export class AnexoController {
   }
 
   @Get()
-  findAll() {
-    return this.anexoService.findAll();
+  findAll(@GetUser('id') userId: string) {
+    return this.anexoService.findAll(userId);
   }
 
   @Get(':id')
@@ -43,8 +44,8 @@ export class AnexoController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAnexoDto: UpdateAnexoDto) {
-    return this.anexoService.update(+id, updateAnexoDto);
+  update(@Param('id') id: string, @GetUser('id') userId: string, @Body() updateAnexoDto: UpdateAnexoDto) {
+    return this.anexoService.update(+id, userId, updateAnexoDto);
   }
 
   @Delete(':id')
