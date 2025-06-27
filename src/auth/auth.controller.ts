@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { CreateUserDto } from 'src/auth/dto/create-user-dto';
 import { LoginDto } from 'src/auth/dto/login.dto';
+import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
@@ -33,13 +34,13 @@ export class AuthController {
   }
 
   @Get()
-  findAll() {
-    return this.authService.findAll();
+  findAll(@GetUser('id') userId: string) {
+    return this.authService.findAll(userId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(id);
+  findOne(@GetUser('id') userId: string, @Param('id') id: string) {
+    return this.authService.findOne(userId, id);
   }
 
   /*   @Patch(':id')

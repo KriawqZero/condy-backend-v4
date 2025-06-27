@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/auth/dto/create-user-dto';
 import { LoginDto } from 'src/auth/dto/login.dto';
 import { HasherService } from 'src/common/services/hasher.service';
+import { UserType } from 'src/user/entities/user.entity';
 import { UserRepository } from 'src/user/user.repository';
 
 @Injectable()
@@ -12,6 +13,14 @@ export class AuthService {
     private readonly userRepository: UserRepository,
     private readonly hasherService: HasherService,
   ) {}
+
+  private async checkPermissions(userId: string, requiredUserType: string): Promise<boolean> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    return user.userType === requiredUserType;
+  }
 
   /**
    * Generates a JWT token for the user.
@@ -138,11 +147,17 @@ export class AuthService {
     };
   }
 
-  async findAll() {
+  async findAll(userId: string) {
+    if (!(await this.checkPermissions(userId, UserType.ADMIN_PLATAFORMA))) {
+      throw new UnauthorizedException('Unauthorized access');
+    }
     return await this.userRepository.findAll();
   }
 
-  async findOne(id: string) {
+  async findOne(userId: string, id: string) {
+    if (!(await this.checkPermissions(userId, UserType.ADMIN_PLATAFORMA))) {
+      throw new UnauthorizedException('Unauthorized access');
+    }
     return await this.userRepository.findById(id);
   }
 
