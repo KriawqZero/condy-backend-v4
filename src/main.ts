@@ -10,7 +10,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
   app.setGlobalPrefix('api');
 
-  if (process.env.NODE_ENV !== 'a') {
+  if (process.env.NODE_ENV !== 'production') {
     app.useGlobalInterceptors(
       new DebugInterceptor(), // <-- esse primeiro
       new FormatResponseInterceptor(), // <-- esse depois
