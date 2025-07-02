@@ -17,7 +17,7 @@ CREATE TYPE "UserStatus" AS ENUM ('ATIVO', 'INATIVO', 'BLOQUEADO', 'PENDENTE', '
 CREATE TABLE "aceito_termos" (
     "id" SERIAL NOT NULL,
     "termoUrl" TEXT NOT NULL,
-    "userId" INTEGER NOT NULL,
+    "userId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -26,7 +26,7 @@ CREATE TABLE "aceito_termos" (
 
 -- CreateTable
 CREATE TABLE "users" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "cpfCnpj" TEXT NOT NULL,
     "whatsapp" TEXT NOT NULL,
@@ -53,14 +53,18 @@ CREATE TABLE "users" (
 -- CreateTable
 CREATE TABLE "imoveis" (
     "id" SERIAL NOT NULL,
+    "nome" TEXT NOT NULL,
+    "gestorId" TEXT NOT NULL,
     "cep" TEXT NOT NULL,
     "endereco" TEXT NOT NULL,
     "cidade" TEXT NOT NULL,
+    "bairro" TEXT NOT NULL,
+    "numero" TEXT NOT NULL,
     "uf" VARCHAR(2) NOT NULL,
-    "quantidade_moradias" INTEGER NOT NULL,
+    "complemento" TEXT,
+    "quantidadeMoradias" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "gestorId" INTEGER NOT NULL,
 
     CONSTRAINT "imoveis_pkey" PRIMARY KEY ("id")
 );
@@ -103,16 +107,17 @@ CREATE TABLE "chamados" (
     "id" SERIAL NOT NULL,
     "numeroChamado" TEXT NOT NULL,
     "descricaoOcorrido" TEXT NOT NULL,
+    "valorEstimado" DECIMAL(10,2),
     "informacoesAdicionais" TEXT,
-    "prioridade" "Prioridade" NOT NULL,
-    "escopo" "Escopo" NOT NULL,
+    "prioridade" "Prioridade" NOT NULL DEFAULT 'MEDIA',
+    "escopo" "Escopo" NOT NULL DEFAULT 'ORCAMENTO',
     "status" "ChamadoStatus" NOT NULL DEFAULT 'NOVO',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "imovelId" INTEGER NOT NULL,
     "ativoId" INTEGER,
-    "solicitanteId" INTEGER NOT NULL,
-    "assignedProviderId" INTEGER,
+    "solicitanteId" TEXT NOT NULL,
+    "prestadorAssignadoId" TEXT,
 
     CONSTRAINT "chamados_pkey" PRIMARY KEY ("id")
 );
@@ -121,12 +126,11 @@ CREATE TABLE "chamados" (
 CREATE TABLE "anexos" (
     "id" SERIAL NOT NULL,
     "url" TEXT NOT NULL,
+    "awsKey" TEXT NOT NULL,
     "title" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "chamadoId" INTEGER NOT NULL,
-    "ativoId" INTEGER,
-    "areasComunsId" INTEGER,
+    "chamadoId" INTEGER,
 
     CONSTRAINT "anexos_pkey" PRIMARY KEY ("id")
 );
@@ -171,13 +175,7 @@ ALTER TABLE "chamados" ADD CONSTRAINT "chamados_ativoId_fkey" FOREIGN KEY ("ativ
 ALTER TABLE "chamados" ADD CONSTRAINT "chamados_solicitanteId_fkey" FOREIGN KEY ("solicitanteId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "chamados" ADD CONSTRAINT "chamados_assignedProviderId_fkey" FOREIGN KEY ("assignedProviderId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "chamados" ADD CONSTRAINT "chamados_prestadorAssignadoId_fkey" FOREIGN KEY ("prestadorAssignadoId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "anexos" ADD CONSTRAINT "anexos_chamadoId_fkey" FOREIGN KEY ("chamadoId") REFERENCES "chamados"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "anexos" ADD CONSTRAINT "anexos_ativoId_fkey" FOREIGN KEY ("ativoId") REFERENCES "ativos"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "anexos" ADD CONSTRAINT "anexos_areasComunsId_fkey" FOREIGN KEY ("areasComunsId") REFERENCES "areas_comuns"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "anexos" ADD CONSTRAINT "anexos_chamadoId_fkey" FOREIGN KEY ("chamadoId") REFERENCES "chamados"("id") ON DELETE SET NULL ON UPDATE CASCADE;

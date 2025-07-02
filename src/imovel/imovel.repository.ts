@@ -11,6 +11,11 @@ export class ImovelRepository {
   async create(dto: Partial<ImovelCreateInput>, gestorId: string): Promise<Imovel> {
     return await this.prisma.imovel.create({
       data: {
+        nome:
+          dto.nome ??
+          (() => {
+            throw new Error('Nome é obrigatório');
+          })(),
         cep:
           dto.cep ??
           (() => {

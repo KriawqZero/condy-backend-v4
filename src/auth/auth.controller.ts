@@ -38,7 +38,7 @@ export class AuthController {
   @Get()
   @UseGuards(JwtGuard)
   findAll(@GetUser('userType') userType: string) {
-    if (userType == UserType.ADMIN_PLATAFORMA) return this.authService.findAll(userType);
+    if (userType == UserType.ADMIN_PLATAFORMA) return this.authService.findAll();
     else throw new UnauthorizedException('Unauthorized access');
   }
 

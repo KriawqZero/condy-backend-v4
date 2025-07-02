@@ -2,6 +2,7 @@ import { ImovelInterface } from 'src/imovel/entities/imovel.interface';
 
 export class Imovel implements ImovelInterface {
   id: number;
+  nome: string;
 
   cep: string;
   endereco: string;

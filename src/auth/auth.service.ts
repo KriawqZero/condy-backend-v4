@@ -138,7 +138,7 @@ export class AuthService {
     };
   }
 
-  async findAll(string) {
+  async findAll() {
     return await this.userRepository.findAll();
   }
 

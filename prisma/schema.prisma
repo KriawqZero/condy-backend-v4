@@ -101,6 +101,7 @@ model User {
 
 model Imovel {
   id       Int    @id @default(autoincrement())
+  nome     String
   gestorId String
   cep      String
   endereco String

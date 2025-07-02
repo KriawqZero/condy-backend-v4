@@ -3,6 +3,10 @@ import { IsInt, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-valida
 export class CreateImovelDto {
   @IsString()
   @IsNotEmpty()
+  nome: string;
+
+  @IsString()
+  @IsNotEmpty()
   cep: string;
 
   @IsString()
