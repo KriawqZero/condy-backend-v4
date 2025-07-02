@@ -13,11 +13,11 @@ export class AnexoService {
     private readonly s3Service: S3Service,
   ) {}
 
-  async upload(file: Express.Multer.File, dto: CreateAnexoDto) {
+  async upload(file: Express.Multer.File, dto: CreateAnexoDto, userId: string) {
     const { title } = dto;
 
     // Upload the file to S3
-    const responseKey = await this.s3Service.uploadFile(file, 'anexos');
+    const responseKey = await this.s3Service.uploadFile(file, 'anexos/' + userId);
 
     // Create the anexo record in the database
     return this.anexoRepository.create({

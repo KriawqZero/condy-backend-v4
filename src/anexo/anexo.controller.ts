@@ -25,11 +25,15 @@ export class AnexoController {
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: Express.Multer.File, @Body() createAnexoDto: CreateAnexoDto) {
+  async uploadFile(
+    @UploadedFile() file: Express.Multer.File,
+    @GetUser('id') userId: string,
+    @Body() createAnexoDto: CreateAnexoDto,
+  ) {
     if (!file) {
       throw new BadRequestException('File is required');
     }
-    const uploadedFile = await this.anexoService.upload(file, createAnexoDto);
+    const uploadedFile = await this.anexoService.upload(file, createAnexoDto, userId);
     return uploadedFile;
   }
 
