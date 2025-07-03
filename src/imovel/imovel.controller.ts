@@ -9,10 +9,19 @@ import { ImovelService } from './imovel.service';
 @UseGuards(JwtGuard)
 export class ImovelController {
   constructor(private readonly imovelService: ImovelService) {}
-
   @Post()
-  create(@Body() createImovelDto: CreateImovelDto, @GetUser('id') gestorId: string) {
-    return this.imovelService.create(createImovelDto, gestorId);
+  create(
+    @Body() createImovelDto: CreateImovelDto,
+    @GetUser('userType') userType: string,
+    @Query('gestorId') gestorId: string,
+  ) {
+    if (userType === UserType.ADMIN_PLATAFORMA) {
+      // Admin pode cadastrar para qualquer gestor (gestorId via query), ou para si mesmo se não informado
+      const targetGestorId = gestorId;
+      return this.imovelService.create(createImovelDto, targetGestorId);
+    } else {
+      throw new UnauthorizedException('Somente administradores da plataforma podem cadastrar imóveis.');
+    }
   }
 
   @Get()
