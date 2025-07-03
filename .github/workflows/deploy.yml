@@ -20,5 +20,6 @@ jobs:
             cd $HOME/api-v4
             git pull
             yarn
+            npx prisma generate
             yarn build
             pm2 restart api-v4
