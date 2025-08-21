@@ -1,24 +1,28 @@
-import { Body, Controller, Get, Post, Query, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, NotFoundException, Post, Query, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { JwtGuard } from 'src/common/guards/jwt.guard';
 import { UserType } from 'src/user/entities/user.entity';
 import { CreateImovelDto } from './dto/create-imovel.dto';
 import { ImovelService } from './imovel.service';
+import { AuthService } from 'src/auth/auth.service';
 
 @Controller('imovel')
 @UseGuards(JwtGuard)
 export class ImovelController {
-  constructor(private readonly imovelService: ImovelService) {}
+  constructor(private readonly imovelService: ImovelService, private readonly authService: AuthService) {}
   @Post()
-  create(
+  async create(
     @Body() createImovelDto: CreateImovelDto,
     @GetUser('userType') userType: string,
     @Query('gestorId') gestorId: string,
   ) {
     if (userType === UserType.ADMIN_PLATAFORMA) {
       // Admin pode cadastrar para qualquer gestor (gestorId via query), ou para si mesmo se não informado
-      const targetGestorId = gestorId;
-      return this.imovelService.create(createImovelDto, targetGestorId);
+      const gestor = await this.authService.findOne(gestorId);
+      if (!gestor) {
+        throw new NotFoundException('Gestor não encontrado.');
+      }
+      return this.imovelService.create(createImovelDto, gestor.id);
     } else {
       throw new UnauthorizedException('Somente administradores da plataforma podem cadastrar imóveis.');
     }

@@ -2,8 +2,10 @@ import { Module } from '@nestjs/common';
 import { ImovelRepository } from 'src/imovel/imovel.repository';
 import { ImovelController } from './imovel.controller';
 import { ImovelService } from './imovel.service';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
+  imports: [AuthModule],
   controllers: [ImovelController],
   providers: [ImovelService, ImovelRepository],
   exports: [ImovelService],
