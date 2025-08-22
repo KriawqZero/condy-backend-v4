@@ -106,4 +106,14 @@ export class ChamadoRepository {
       },
     });
   }
+
+  async findOneByNumeroChamado(numeroChamado: string): Promise<Chamado | null> {
+    return await this.prisma.chamado.findUnique({
+      where: { numeroChamado },
+      include: {
+        imovel: true,
+        anexos: true,
+      },
+    });
+  }
 }

@@ -92,6 +92,16 @@ export class ChamadoService {
     return chamado;
   }
 
+  // Consulta pública: não retorna dados sensíveis do solicitante
+  async findPublicByNumeroChamado(numeroChamado: string): Promise<Partial<Chamado> | null> {
+    const chamado = await this.chamadoRepository.findOneByNumeroChamado(numeroChamado);
+    if (!chamado) return null;
+
+    // Remover dados sensíveis antes de retornar publicamente
+    const { solicitanteId, prestadorAssignadoId, ...safe } = chamado as any;
+    return safe;
+  }
+
   update(id: number, updateChamadoDto: UpdateChamadoDto) {
     return `This action updates a #${id} chamado`;
   }
