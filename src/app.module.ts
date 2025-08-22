@@ -9,6 +9,9 @@ import { PrismaModule } from './database/prisma.module';
 import { ImovelModule } from './imovel/imovel.module';
 import { UserModule } from './user/user.module';
 import { AnexoModule } from './anexo/anexo.module';
+import { PropostaModule } from './proposta/proposta.module';
+import { OrdemServicoModule } from './ordem-servico/ordem-servico.module';
+import { PrestadorModule } from './prestador/prestador.module';
 
 @Module({
   imports: [
@@ -22,6 +25,9 @@ import { AnexoModule } from './anexo/anexo.module';
     ChamadoModule,
     ImovelModule,
     AnexoModule,
+    PropostaModule,
+    OrdemServicoModule,
+    PrestadorModule,
   ],
   controllers: [AppController],
   providers: [AppService],
