@@ -29,6 +29,21 @@ enum ChamadoStatus {
   CONCLUIDO
 }
 
+enum PropostaStatus {
+  PROPOSTA_ENVIADA
+  PROPOSTA_ACEITA
+  PROPOSTA_RECUSADA
+  CONTRAPROPOSTA_ENVIADA
+  CONTRAPROPOSTA_APROVADA
+  CONTRAPROPOSTA_RECUSADA
+}
+
+enum OrdemServicoStatus {
+  EM_ANDAMENTO
+  CONCLUIDO
+  CANCELADO
+}
+
 enum Prioridade {
   BAIXA
   MEDIA
@@ -94,7 +109,10 @@ model User {
   chamadosCriados    Chamado[] @relation("ChamadoCriador")
   chamadosDesignados Chamado[] @relation("ChamadoProvider")
 
-  AceiteTermos AceiteTermos[]
+  AceiteTermos    AceiteTermos[]
+  PropostaServico PropostaServico[]
+  OrdemServico    OrdemServico[]
+  auditLogs       AuditLog[]
 
   @@map("users")
 }
@@ -193,9 +211,66 @@ model Chamado {
   solicitante   User   @relation("ChamadoCriador", fields: [solicitanteId], references: [id])
 
   prestadorAssignadoId String?
-  prestadorAssignado   User?   @relation("ChamadoProvider", fields: [prestadorAssignadoId], references: [id])
+  prestadorAssignado   User?             @relation("ChamadoProvider", fields: [prestadorAssignadoId], references: [id])
+  PropostaServico      PropostaServico[]
+  OrdemServico         OrdemServico?
 
   @@map("chamados")
+}
+
+model PropostaServico {
+  id                          Int            @id @default(autoincrement())
+  chamadoId                   Int
+  prestadorId                 String
+  precoSugeridoMin            Decimal?       @db.Decimal(10, 2)
+  precoSugeridoMax            Decimal?       @db.Decimal(10, 2)
+  prazoSugerido               Int?
+  status                      PropostaStatus @default(PROPOSTA_ENVIADA)
+  contrapropostaPrecoMin      Decimal?       @db.Decimal(10, 2)
+  contrapropostaPrecoMax      Decimal?       @db.Decimal(10, 2)
+  contrapropostaPrazo         Int?
+  contrapropostaJustificativa String?
+  recusaJustificativa         String?
+  createdAt                   DateTime       @default(now())
+  updatedAt                   DateTime       @updatedAt
+
+  // Relacionamentos
+  chamado   Chamado @relation(fields: [chamadoId], references: [id])
+  prestador User    @relation(fields: [prestadorId], references: [id])
+
+  @@map("propostas_servico")
+  @@unique([chamadoId, prestadorId])
+}
+
+model OrdemServico {
+  id            Int                @id @default(autoincrement())
+  chamadoId     Int                @unique
+  prestadorId   String
+  valorAcordado Decimal?           @db.Decimal(10, 2)
+  prazoAcordado Int?
+  status        OrdemServicoStatus @default(EM_ANDAMENTO)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  // Relacionamentos
+  chamado   Chamado @relation(fields: [chamadoId], references: [id])
+  prestador User    @relation(fields: [prestadorId], references: [id])
+
+  @@map("ordens_servico")
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  actorId   String
+  action    String
+  entity    String
+  entityId  String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id])
+
+  @@map("audit_logs")
 }
 
 model Anexo {
