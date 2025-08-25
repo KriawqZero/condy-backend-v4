@@ -46,6 +46,56 @@ export class OrdemServicoService {
       return updated;
     });
   }
+
+  async criarOrdemAvulsa(
+    prestadorId: string,
+    body: { descricao: string; valorAcordado?: number; prazoAcordado?: number; referenciaExterna?: string },
+  ) {
+    const user = await this.userService.findById(prestadorId);
+    if (!user || user.userType !== UserType.PRESTADOR) {
+      throw new UnauthorizedException('Apenas prestadores podem criar OS avulsa');
+    }
+
+    // Criar um Chamado interno "fantasma" com escopo ORCAMENTO para manter integridade
+    const chamado = await this.prisma.chamado.create({
+      data: {
+        numeroChamado: `OS-${Date.now()}`,
+        descricaoOcorrido: body.descricao,
+        prioridade: 'MEDIA' as any,
+        escopo: 'ORCAMENTO' as any,
+        status: 'NOVO' as any,
+        // Relacionamentos mínimos: precisamos de um imovel e solicitante
+        // Como é externo, criamos um Imovel placeholder atrelado ao prestador como gestor
+        imovel: {
+          create: {
+            nome: 'OS Externa',
+            gestorId: prestadorId,
+            cep: '00000000',
+            endereco: 'N/A',
+            cidade: 'N/A',
+            bairro: 'N/A',
+            numero: '0',
+            uf: 'NA',
+            quantidadeMoradias: 0,
+          },
+        },
+        solicitante: { connect: { id: prestadorId } },
+      },
+    });
+
+    const os = await this.prisma.ordemServico.create({
+      data: {
+        chamadoId: chamado.id,
+        prestadorId,
+        valorAcordado: body.valorAcordado as any,
+        prazoAcordado: body.prazoAcordado ?? null,
+        status: OrdemServicoStatus.EM_ANDAMENTO,
+      },
+      include: { chamado: true },
+    });
+
+    return os;
+  }
 }
 
 

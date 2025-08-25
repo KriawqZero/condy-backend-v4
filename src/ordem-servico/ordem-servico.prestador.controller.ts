@@ -31,6 +31,21 @@ export class OrdemServicoController {
   ) {
     return this.osService.alterarStatus(Number(id), prestadorId, body.status);
   }
+
+  // Criação de OS avulsa (fora da plataforma) pelo prestador
+  @Post()
+  async criarOrdemAvulsa(
+    @GetUser('id') prestadorId: string,
+    @Body()
+    body: {
+      descricao: string;
+      valorAcordado?: number;
+      prazoAcordado?: number;
+      referenciaExterna?: string;
+    },
+  ) {
+    return this.osService.criarOrdemAvulsa(prestadorId, body);
+  }
 }
 
 

@@ -29,8 +29,23 @@ export class ChamadoController {
 
   @Patch(':id')
   @UseGuards(JwtGuard)
-  update(@Param('id') id: string, @Body() updateChamadoDto: UpdateChamadoDto) {
-    return this.chamadoService.update(+id, updateChamadoDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateChamadoDto: UpdateChamadoDto,
+    @GetUser('id') userId: string,
+  ) {
+    return this.chamadoService.update(+id, userId, updateChamadoDto);
+  }
+
+  // Atribui prestador ao chamado (Admin)
+  @Patch(':id/assign-prestador/:prestadorId')
+  @UseGuards(JwtGuard)
+  assignPrestador(
+    @Param('id') id: string,
+    @Param('prestadorId') prestadorId: string,
+    @GetUser('id') userId: string,
+  ) {
+    return this.chamadoService.update(+id, userId, { prestadorAssignadoId: prestadorId } as any);
   }
 
   @Delete(':id')

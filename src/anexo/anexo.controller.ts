@@ -12,6 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { extname } from 'path';
 import { AnexoService } from 'src/anexo/anexo.service';
 import { CreateAnexoDto } from 'src/anexo/dto/create-anexo.dto';
 import { UpdateAnexoDto } from 'src/anexo/dto/update-anexo.dto';
@@ -24,7 +25,24 @@ export class AnexoController {
   constructor(private readonly anexoService: AnexoService) {}
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+      fileFilter: (_req, file, cb) => {
+        const allowed = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4'];
+        if (!allowed.includes(file.mimetype)) {
+          return cb(new BadRequestException('Tipo de arquivo não suportado'), false);
+        }
+        // Bloquear arquivos sem extensão conhecida
+        const ext = extname(file.originalname || '').toLowerCase();
+        const allowedExt = ['.jpg', '.jpeg', '.png', '.webp', '.mp4'];
+        if (!!ext && !allowedExt.includes(ext)) {
+          return cb(new BadRequestException('Extensão de arquivo não suportada'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
     @GetUser('id') userId: string,

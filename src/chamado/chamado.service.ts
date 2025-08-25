@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ChamadoRepository } from 'src/chamado/chamado.repository';
 import { Chamado } from 'src/chamado/entities/chamado.entity';
 import { ResponsePayloadWithMeta } from 'src/common/pagination';
@@ -102,8 +102,33 @@ export class ChamadoService {
     return safe;
   }
 
-  update(id: number, updateChamadoDto: UpdateChamadoDto) {
-    return `This action updates a #${id} chamado`;
+  async update(id: number, actorUserId: string, updateChamadoDto: UpdateChamadoDto) {
+    // Permissões:
+    // - Admin pode atualizar qualquer campo
+    // - Síndico (solicitante) pode atualizar somente descricaoOcorrido, informacoesAdicionais, prioridade, escopo
+    // - Prestador não atualiza chamado (apenas status via OS)
+    const actor = await this.userService.findById(actorUserId);
+    if (!actor) throw new UnauthorizedException('User not found');
+
+    const chamado = await this.chamadoRepository.findOneById(id);
+    if (!chamado) throw new NotFoundException('Chamado not found');
+
+    if (actor.userType === UserType.PRESTADOR) {
+      throw new UnauthorizedException('Prestador não pode atualizar o chamado');
+    }
+
+    if (actor.userType !== UserType.ADMIN_PLATAFORMA && chamado.solicitanteId !== actorUserId) {
+      throw new UnauthorizedException('Sem permissão para atualizar este chamado');
+    }
+
+    let payload: any = updateChamadoDto;
+    if (actor.userType !== UserType.ADMIN_PLATAFORMA) {
+      // Remover campos sensíveis para síndico
+      const { status, valorEstimado, prestadorAssignadoId, ...allowed } = updateChamadoDto as any;
+      payload = allowed;
+    }
+
+    return this.chamadoRepository.update(id, payload);
   }
 
   remove(id: number) {

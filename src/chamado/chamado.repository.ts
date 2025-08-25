@@ -116,4 +116,24 @@ export class ChamadoRepository {
       },
     });
   }
+ 
+  async update(id: number, data: Partial<Chamado>): Promise<Chamado> {
+    return await this.prisma.chamado.update({
+      where: { id },
+      data: {
+        descricaoOcorrido: data.descricaoOcorrido ?? undefined,
+        informacoesAdicionais: (data as any).informacoesAdicionais ?? undefined,
+        prioridade: (data as any).prioridade ?? undefined,
+        escopo: (data as any).escopo ?? undefined,
+        status: (data as any).status ?? undefined,
+        valorEstimado: (data as any).valorEstimado ?? undefined,
+        prestadorAssignadoId: (data as any).prestadorAssignadoId ?? undefined,
+      },
+      include: {
+        solicitante: true,
+        imovel: true,
+        anexos: true,
+      },
+    });
+  }
 }

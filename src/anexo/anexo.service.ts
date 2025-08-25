@@ -20,11 +20,12 @@ export class AnexoService {
     const responseKey = await this.s3Service.uploadFile(file, 'anexos/' + userId);
 
     // Create the anexo record in the database
-    return this.anexoRepository.create({
+    const created = await this.anexoRepository.create({
       title,
       url: this.s3Service.getFileUrl(responseKey),
       awsKey: responseKey,
     });
+    return { status: 'success', data: created } as any;
   }
 
   async update(id: number, userId: string, dto: UpdateAnexoDto) {

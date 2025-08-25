@@ -173,24 +173,34 @@ export class PropostaService {
     const result = await this.prisma.$transaction(async (tx) => {
       const created: any[] = [];
       for (const prestadorId of body.prestadores) {
-        // upsert para idempotência
-        const proposta = await tx.propostaServico.upsert({
-          where: { chamadoId_prestadorId: { chamadoId: body.chamadoId, prestadorId } },
-          update: {
-            precoSugeridoMin: body.precoMin ? new Prisma.Decimal(body.precoMin) : null,
-            precoSugeridoMax: body.precoMax ? new Prisma.Decimal(body.precoMax) : null,
-            prazoSugerido: body.prazo ?? null,
-            status: PropostaStatus.PROPOSTA_ENVIADA,
-          },
-          create: {
-            chamadoId: body.chamadoId,
-            prestadorId,
-            precoSugeridoMin: body.precoMin ? new Prisma.Decimal(body.precoMin) : null,
-            precoSugeridoMax: body.precoMax ? new Prisma.Decimal(body.precoMax) : null,
-            prazoSugerido: body.prazo ?? null,
-            status: PropostaStatus.PROPOSTA_ENVIADA,
-          },
+        // Upsert manual para não depender de índice único no banco
+        const existing = await tx.propostaServico.findFirst({
+          where: { chamadoId: body.chamadoId, prestadorId },
         });
+
+        let proposta;
+        if (existing) {
+          proposta = await tx.propostaServico.update({
+            where: { id: existing.id },
+            data: {
+              precoSugeridoMin: body.precoMin ? new Prisma.Decimal(body.precoMin) : null,
+              precoSugeridoMax: body.precoMax ? new Prisma.Decimal(body.precoMax) : null,
+              prazoSugerido: body.prazo ?? null,
+              status: PropostaStatus.PROPOSTA_ENVIADA,
+            },
+          });
+        } else {
+          proposta = await tx.propostaServico.create({
+            data: {
+              chamadoId: body.chamadoId,
+              prestadorId,
+              precoSugeridoMin: body.precoMin ? new Prisma.Decimal(body.precoMin) : null,
+              precoSugeridoMax: body.precoMax ? new Prisma.Decimal(body.precoMax) : null,
+              prazoSugerido: body.prazo ?? null,
+              status: PropostaStatus.PROPOSTA_ENVIADA,
+            },
+          });
+        }
         created.push(proposta);
         await this.audit.log(adminId, 'PROPOSTA_ENVIADA', 'PropostaServico', String(proposta.id), {
           chamadoId: body.chamadoId,

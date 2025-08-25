@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { JwtGuard } from 'src/common/guards/jwt.guard';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { PropostaService } from './proposta.service';
@@ -33,6 +33,15 @@ export class PropostaAdminController {
     },
   ) {
     return this.propostaService.adminEnviarPropostas(adminId, body);
+  }
+
+  @Get('por-chamado/:chamadoId')
+  async listarPorChamado(@Param('chamadoId') chamadoId: string) {
+    return this.propostaService['prisma'].propostaServico.findMany({
+      where: { chamadoId: Number(chamadoId) },
+      include: { prestador: true },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 }
 
