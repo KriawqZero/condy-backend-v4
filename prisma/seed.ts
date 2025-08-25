@@ -71,10 +71,10 @@ async function createImovelParaGestor(gestorId: string) {
 
 async function main() {
   // Admin
-  const admin = await upsertUser({
+  await upsertUser({
     name: 'Admin Condy',
     email: 'admin@condy.com.br',
-    password: 'AdminSenh@123',
+    password: 'Teste123',
     cpfCnpj: '60185344000144',
     whatsapp: '11900000000',
     userType: 'ADMIN_PLATAFORMA',
@@ -84,7 +84,7 @@ async function main() {
   await upsertUser({
     name: 'Prestador Jovaldo',
     email: 'prestador@email.com',
-    password: 'LucasTeste123',
+    password: 'Teste123',
     userType: 'PRESTADOR',
     cpfCnpj: '06676429195',
     whatsapp: '11987624120',
@@ -92,10 +92,10 @@ async function main() {
   });
 
   // Síndico (profissional conforme payload)
-  await upsertUser({
+  const sindico = await upsertUser({
     name: 'Lucas Souza Mezabarba',
     email: 'lucas.teste@email.com',
-    password: 'LucasTeste123',
+    password: 'Teste123',
     userType: 'SINDICO_PROFISSIONAL',
     cpfCnpj: '31323369000169',
     whatsapp: '11987624121',
@@ -104,8 +104,7 @@ async function main() {
     periodoMandatoFim: '2025-12-31',
   });
 
-  // Imóvel do Admin
-  await createImovelParaGestor(admin.id);
+  await createImovelParaGestor(sindico.id);
 
   console.log('Seed concluído com sucesso.');
 }
