@@ -8,7 +8,7 @@ export class PropostaRepository {
 
   async listByPrestador(prestadorId: string) {
     return this.prisma.propostaServico.findMany({
-      where: { prestadorId },
+      where: { prestadorId, NOT: { status: { in: [PropostaStatus.PROPOSTA_ACEITA, PropostaStatus.CONTRAPROPOSTA_APROVADA] } } },
       include: {
         chamado: { include: { imovel: true, solicitante: true } },
         prestador: true,
