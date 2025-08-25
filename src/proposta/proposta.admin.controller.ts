@@ -1,4 +1,4 @@
-import { Controller, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
 import { JwtGuard } from 'src/common/guards/jwt.guard';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { PropostaService } from './proposta.service';
@@ -16,6 +16,23 @@ export class PropostaAdminController {
   @Post(':id/recusar-contraproposta')
   async recusar(@Param('id') id: string, @GetUser('id') adminId: string) {
     return this.propostaService.adminDecidirContraproposta(Number(id), adminId, 'recusar');
+  }
+
+  // Enviar propostas para múltiplos prestadores
+  @Post('enviar')
+  async enviarPropostas(
+    @GetUser('id') adminId: string,
+    @Body()
+    body: {
+      chamadoId: number;
+      prestadores: string[]; // array de userIds PRESTADOR
+      precoMin?: string;
+      precoMax?: string;
+      prazo?: number;
+      mensagem?: string;
+    },
+  ) {
+    return this.propostaService.adminEnviarPropostas(adminId, body);
   }
 }
 

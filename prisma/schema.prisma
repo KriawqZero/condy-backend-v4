@@ -112,6 +112,7 @@ model User {
   AceiteTermos    AceiteTermos[]
   PropostaServico PropostaServico[]
   OrdemServico    OrdemServico[]
+  auditLogs       AuditLog[]
 
   @@map("users")
 }
@@ -238,6 +239,7 @@ model PropostaServico {
   prestador User    @relation(fields: [prestadorId], references: [id])
 
   @@map("propostas_servico")
+  @@unique([chamadoId, prestadorId])
 }
 
 model OrdemServico {
@@ -255,6 +257,20 @@ model OrdemServico {
   prestador User    @relation(fields: [prestadorId], references: [id])
 
   @@map("ordens_servico")
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  actorId   String
+  action    String
+  entity    String
+  entityId  String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  actor User @relation(fields: [actorId], references: [id])
+
+  @@map("audit_logs")
 }
 
 model Anexo {

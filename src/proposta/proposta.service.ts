@@ -4,6 +4,7 @@ import { PropostaRepository } from './proposta.repository';
 import { UserService } from 'src/user/user.service';
 import { UserType } from 'src/user/entities/user.entity';
 import { PropostaStatus, OrdemServicoStatus, ChamadoStatus, Prisma } from 'generated/prisma/client';
+import { AuditService } from 'src/common/services/audit.service';
 
 @Injectable()
 export class PropostaService {
@@ -11,6 +12,7 @@ export class PropostaService {
     private readonly prisma: PrismaService,
     private readonly propostaRepo: PropostaRepository,
     private readonly userService: UserService,
+    private readonly audit: AuditService,
   ) {}
 
   async listPrestador(prestadorId: string) {
@@ -144,6 +146,65 @@ export class PropostaService {
 
       return updated;
     });
+  }
+
+  async adminEnviarPropostas(
+    adminId: string,
+    body: {
+      chamadoId: number;
+      prestadores: string[];
+      precoMin?: string;
+      precoMax?: string;
+      prazo?: number;
+      mensagem?: string;
+    },
+  ) {
+    const admin = await this.userService.findById(adminId);
+    if (!admin || admin.userType !== UserType.ADMIN_PLATAFORMA) throw new UnauthorizedException('Acesso negado');
+
+    if (!body.chamadoId || !Array.isArray(body.prestadores) || body.prestadores.length === 0) {
+      throw new BadRequestException('chamadoId e prestadores são obrigatórios');
+    }
+    if (body.precoMin && body.precoMax && Number(body.precoMin) > Number(body.precoMax)) {
+      throw new BadRequestException('Faixa de preço inválida');
+    }
+
+    // Idempotência: unique (chamadoId, prestadorId) cobre duplicidade
+    const result = await this.prisma.$transaction(async (tx) => {
+      const created: any[] = [];
+      for (const prestadorId of body.prestadores) {
+        // upsert para idempotência
+        const proposta = await tx.propostaServico.upsert({
+          where: { chamadoId_prestadorId: { chamadoId: body.chamadoId, prestadorId } },
+          update: {
+            precoSugeridoMin: body.precoMin ? new Prisma.Decimal(body.precoMin) : null,
+            precoSugeridoMax: body.precoMax ? new Prisma.Decimal(body.precoMax) : null,
+            prazoSugerido: body.prazo ?? null,
+            status: PropostaStatus.PROPOSTA_ENVIADA,
+          },
+          create: {
+            chamadoId: body.chamadoId,
+            prestadorId,
+            precoSugeridoMin: body.precoMin ? new Prisma.Decimal(body.precoMin) : null,
+            precoSugeridoMax: body.precoMax ? new Prisma.Decimal(body.precoMax) : null,
+            prazoSugerido: body.prazo ?? null,
+            status: PropostaStatus.PROPOSTA_ENVIADA,
+          },
+        });
+        created.push(proposta);
+        await this.audit.log(adminId, 'PROPOSTA_ENVIADA', 'PropostaServico', String(proposta.id), {
+          chamadoId: body.chamadoId,
+          prestadorId,
+          precoMin: body.precoMin ?? null,
+          precoMax: body.precoMax ?? null,
+          prazo: body.prazo ?? null,
+          mensagem: body.mensagem ?? null,
+        });
+      }
+      return created;
+    });
+
+    return { sucesso: true, propostas: result };
   }
 }
 
