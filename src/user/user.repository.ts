@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
-import { SubsindicoInfo, User } from 'src/user/entities/user.entity';
+import { SubsindicoInfo, User, UserType } from 'src/user/entities/user.entity';
 import { UserCreateInput } from 'src/user/entities/user.interface';
 
 @Injectable()
@@ -96,8 +96,11 @@ export class UserRepository {
     };
   }
 
-  async findAll(): Promise<User[]> {
-    const users = await this.prisma.user.findMany();
+  async findAll(userTypeQuery?: keyof typeof UserType): Promise<User[]> {
+    let users = await this.prisma.user.findMany();
+    if (userTypeQuery) {
+      users = users.filter(user => user.userType === userTypeQuery);
+    }
     return users.map(user => ({
       ...user,
       subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),

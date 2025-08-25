@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/auth/dto/create-user-dto';
 import { LoginDto } from 'src/auth/dto/login.dto';
 import { HasherService } from 'src/common/services/hasher.service';
+import { UserType } from 'src/user/entities/user.entity';
 import { UserRepository } from 'src/user/user.repository';
 
 @Injectable()
@@ -138,8 +139,8 @@ export class AuthService {
     };
   }
 
-  async findAll() {
-    return await this.userRepository.findAll();
+  async findAll(userTypeQuery: keyof typeof UserType | undefined) {
+    return await this.userRepository.findAll(userTypeQuery);
   }
 
   async findOne(id: string) {
