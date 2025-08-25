@@ -1,4 +1,4 @@
-import { Decimal } from 'generated/prisma/runtime/library';
+import { Decimal } from '@prisma/client/runtime/library';
 import { ChamadoInterface } from 'src/chamado/entities/chamado.interface';
 import { ChamadoStatus, Escopo, Prioridade } from 'src/chamado/entities/types';
 

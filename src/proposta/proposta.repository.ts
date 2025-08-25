@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
-import { PropostaStatus } from 'generated/prisma/client';
+import { PropostaStatus } from '@prisma/client';
 
 @Injectable()
 export class PropostaRepository {

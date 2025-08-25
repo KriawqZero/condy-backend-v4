@@ -3,7 +3,7 @@ import { PrismaService } from 'src/database/prisma.service';
 import { OrdemServicoRepository } from './ordem-servico.repository';
 import { UserService } from 'src/user/user.service';
 import { UserType } from 'src/user/entities/user.entity';
-import { ChamadoStatus, OrdemServicoStatus } from 'generated/prisma/client';
+import { ChamadoStatus, OrdemServicoStatus } from '@prisma/client';
 
 @Injectable()
 export class OrdemServicoService {

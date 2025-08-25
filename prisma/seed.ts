@@ -4,7 +4,7 @@
     - yarn seed
 */
 
-import { PrismaClient, UserType } from '../generated/prisma/client';
+import { PrismaClient, UserType } from '@prisma/client';
 const bcrypt = require('bcrypt');
 
 const prisma = new PrismaClient();

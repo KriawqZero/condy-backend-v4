@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/co
 import { JwtGuard } from 'src/common/guards/jwt.guard';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { OrdemServicoService } from './ordem-servico.service';
-import { OrdemServicoStatus } from 'generated/prisma/client';
+import { OrdemServicoStatus } from '@prisma/client';
 
 @Controller('prestador/ordens')
 @UseGuards(JwtGuard)

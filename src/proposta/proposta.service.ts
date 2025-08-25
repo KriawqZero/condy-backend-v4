@@ -3,7 +3,7 @@ import { PrismaService } from 'src/database/prisma.service';
 import { PropostaRepository } from './proposta.repository';
 import { UserService } from 'src/user/user.service';
 import { UserType } from 'src/user/entities/user.entity';
-import { PropostaStatus, OrdemServicoStatus, ChamadoStatus, Prisma } from 'generated/prisma/client';
+import { PropostaStatus, OrdemServicoStatus, ChamadoStatus, Prisma } from '@prisma/client';
 import { AuditService } from 'src/common/services/audit.service';
 
 @Injectable()
