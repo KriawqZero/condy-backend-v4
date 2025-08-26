@@ -57,6 +57,7 @@ export class ChamadoRepository {
           include: {
             solicitante: true,
             imovel: true,
+            prestadorAssignado: true,
           },
         }),
       () => this.prisma.chamado.count(),
@@ -73,6 +74,7 @@ export class ChamadoRepository {
           include: {
             solicitante: true,
             imovel: true,
+            prestadorAssignado: true,
           },
         }),
       () => this.prisma.chamado.count({ where: { prestadorAssignadoId: prestadorId } }),
@@ -90,6 +92,7 @@ export class ChamadoRepository {
             solicitante: true,
             imovel: true,
             anexos: true,
+            prestadorAssignado: true,
           },
         }),
       () => this.prisma.chamado.count(),
@@ -103,6 +106,7 @@ export class ChamadoRepository {
         solicitante: true,
         imovel: true,
         anexos: true,
+        prestadorAssignado: true,
       },
     });
   }

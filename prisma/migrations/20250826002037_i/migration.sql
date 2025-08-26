@@ -163,6 +163,19 @@ CREATE TABLE "public"."ordens_servico" (
 );
 
 -- CreateTable
+CREATE TABLE "public"."audit_logs" (
+    "id" SERIAL NOT NULL,
+    "actorId" TEXT NOT NULL,
+    "action" TEXT NOT NULL,
+    "entity" TEXT NOT NULL,
+    "entityId" TEXT NOT NULL,
+    "metadata" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "public"."anexos" (
     "id" SERIAL NOT NULL,
     "url" TEXT NOT NULL,
@@ -189,6 +202,9 @@ CREATE UNIQUE INDEX "ativos_assetCode_key" ON "public"."ativos"("assetCode");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "chamados_numeroChamado_key" ON "public"."chamados"("numeroChamado");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "propostas_servico_chamadoId_prestadorId_key" ON "public"."propostas_servico"("chamadoId", "prestadorId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ordens_servico_chamadoId_key" ON "public"."ordens_servico"("chamadoId");
@@ -231,6 +247,9 @@ ALTER TABLE "public"."ordens_servico" ADD CONSTRAINT "ordens_servico_chamadoId_f
 
 -- AddForeignKey
 ALTER TABLE "public"."ordens_servico" ADD CONSTRAINT "ordens_servico_prestadorId_fkey" FOREIGN KEY ("prestadorId") REFERENCES "public"."users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."audit_logs" ADD CONSTRAINT "audit_logs_actorId_fkey" FOREIGN KEY ("actorId") REFERENCES "public"."users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."anexos" ADD CONSTRAINT "anexos_chamadoId_fkey" FOREIGN KEY ("chamadoId") REFERENCES "public"."chamados"("id") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -19,11 +19,29 @@ export class PropostaService {
     return this.propostaRepo.listByPrestador(prestadorId);
   }
 
-  async aceitarProposta(id: number, prestadorId: string) {
+  async aceitarProposta(id: number, prestadorId: string, valorAcordado?: string) {
     const proposta = await this.propostaRepo.findByIdForPrestador(id, prestadorId);
     if (!proposta) throw new NotFoundException('Proposta não encontrada');
     if (proposta.status !== PropostaStatus.PROPOSTA_ENVIADA)
       throw new BadRequestException('Estado inválido para aceite');
+
+    // Valor acordado é obrigatório no aceite do prestador
+    if (!valorAcordado || isNaN(Number(valorAcordado)) || Number(valorAcordado) <= 0) {
+      throw new BadRequestException('Valor acordado é obrigatório e deve ser numérico (> 0)');
+    }
+
+    const v = Number(valorAcordado);
+    if (proposta.precoSugeridoMin !== null && proposta.precoSugeridoMin !== undefined) {
+      const minPermitido = Number(proposta.precoSugeridoMin) * 0.5;
+      if (v < minPermitido) {
+        throw new BadRequestException(`Valor acordado abaixo do mínimo permitido (${minPermitido}).`);
+      }
+    }
+    if (proposta.precoSugeridoMax !== null && proposta.precoSugeridoMax !== undefined) {
+      if (v > Number(proposta.precoSugeridoMax)) {
+        throw new BadRequestException(`Valor acordado acima do máximo permitido (${proposta.precoSugeridoMax}).`);
+      }
+    }
 
     return this.prisma.$transaction(async (tx) => {
       // Atualiza proposta
@@ -41,7 +59,7 @@ export class PropostaService {
           chamadoId: proposta.chamadoId,
           prestadorId: prestadorId,
           status: OrdemServicoStatus.EM_ANDAMENTO,
-          valorAcordado: proposta.precoSugeridoMax ?? proposta.precoSugeridoMin ?? null,
+          valorAcordado: new Prisma.Decimal(valorAcordado),
           prazoAcordado: proposta.prazoSugerido ?? null,
         },
       });
@@ -49,7 +67,7 @@ export class PropostaService {
       // Atualiza status do chamado
       await tx.chamado.update({
         where: { id: proposta.chamadoId },
-        data: { status: ChamadoStatus.EM_ATENDIMENTO, prestadorAssignadoId: prestadorId },
+        data: { status: ChamadoStatus.EM_ATENDIMENTO, valorEstimado: new Prisma.Decimal(valorAcordado), prestadorAssignadoId: prestadorId },
       });
 
       // Encerra outras propostas
@@ -84,7 +102,7 @@ export class PropostaService {
 
     if (dados.precoMin && dados.precoMax) {
       if (Number(dados.precoMin) > Number(dados.precoMax)) {
-        throw new BadRequestException('Faixa de preço inválida');
+        throw new BadRequestException('Faixa de preço inválida: mínimo maior que máximo');
       }
     }
 
@@ -100,6 +118,7 @@ export class PropostaService {
     id: number,
     adminId: string,
     acao: 'aprovar' | 'recusar',
+    valorAcordado?: string,
   ) {
     const admin = await this.userService.findById(adminId);
     if (!admin || admin.userType !== UserType.ADMIN_PLATAFORMA)
@@ -124,12 +143,29 @@ export class PropostaService {
       const existingOs = await tx.ordemServico.findUnique({ where: { chamadoId: updated.chamadoId } });
       if (existingOs) throw new BadRequestException('Já existe OS para este chamado');
 
+      // Valor acordado é obrigatório na aprovação do admin
+      if (!valorAcordado || isNaN(Number(valorAcordado)) || Number(valorAcordado) <= 0) {
+        throw new BadRequestException('Valor acordado é obrigatório e deve ser numérico (> 0)');
+      }
+      const v = Number(valorAcordado);
+      if (updated.contrapropostaPrecoMin !== null && updated.contrapropostaPrecoMin !== undefined) {
+        const minPermitido = Number(updated.contrapropostaPrecoMin) * 0.5;
+        if (v < minPermitido) {
+          throw new BadRequestException(`Valor acordado abaixo do mínimo permitido (${minPermitido}).`);
+        }
+      }
+      if (updated.contrapropostaPrecoMax !== null && updated.contrapropostaPrecoMax !== undefined) {
+        if (v > Number(updated.contrapropostaPrecoMax)) {
+          throw new BadRequestException(`Valor acordado acima do máximo permitido (${updated.contrapropostaPrecoMax}).`);
+        }
+      }
+
       await tx.ordemServico.create({
         data: {
           chamadoId: updated.chamadoId,
           prestadorId: updated.prestadorId,
           status: OrdemServicoStatus.EM_ANDAMENTO,
-          valorAcordado: updated.contrapropostaPrecoMax ?? updated.contrapropostaPrecoMin ?? null,
+          valorAcordado: new Prisma.Decimal(valorAcordado),
           prazoAcordado: updated.contrapropostaPrazo ?? null,
         },
       });
@@ -166,7 +202,7 @@ export class PropostaService {
       throw new BadRequestException('chamadoId e prestadores são obrigatórios');
     }
     if (body.precoMin && body.precoMax && Number(body.precoMin) > Number(body.precoMax)) {
-      throw new BadRequestException('Faixa de preço inválida');
+      throw new BadRequestException('Faixa de preço inválida: mínimo maior que máximo');
     }
 
     // Idempotência: unique (chamadoId, prestadorId) cobre duplicidade

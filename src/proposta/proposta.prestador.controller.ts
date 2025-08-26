@@ -14,8 +14,12 @@ export class PropostaPrestadorController {
   }
 
   @Post(':id/aceitar')
-  async aceitar(@Param('id') id: string, @GetUser('id') prestadorId: string) {
-    return this.propostaService.aceitarProposta(Number(id), prestadorId);
+  async aceitar(
+    @Param('id') id: string,
+    @GetUser('id') prestadorId: string,
+    @Body() body: { valorAcordado?: string },
+  ) {
+    return this.propostaService.aceitarProposta(Number(id), prestadorId, body?.valorAcordado);
   }
 
   @Post(':id/recusar')

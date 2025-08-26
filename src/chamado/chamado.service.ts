@@ -99,7 +99,19 @@ export class ChamadoService {
 
     // Remover dados sensíveis antes de retornar publicamente
     const { solicitanteId, prestadorAssignadoId, ...safe } = chamado as any;
-    return safe;
+    // Incluir dados do prestador (não sensíveis): nome/empresa e whatsapp
+    const prestador = (chamado as any).prestadorAssignado || null;
+    return {
+      ...safe,
+      prestadorPublico: prestador
+        ? {
+            id: prestador.id,
+            name: prestador.name,
+            nomeFantasia: prestador.nomeFantasia ?? null,
+            whatsapp: prestador.whatsapp,
+          }
+        : null,
+    } as any;
   }
 
   async update(id: number, actorUserId: string, updateChamadoDto: UpdateChamadoDto) {
