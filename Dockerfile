@@ -3,7 +3,7 @@ FROM node:22-alpine AS base
 
 # Instalar dependências apenas quando necessário
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 
 # Instalar dependências baseadas no arquivo de lock preferido
