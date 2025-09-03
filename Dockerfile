@@ -25,13 +25,14 @@ COPY . .
 RUN npx prisma generate
 
 # Build da aplicação
+ENV NODE_ENV=production
 RUN yarn build
 
 # Etapa de produção
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nestjs
