@@ -47,4 +47,4 @@ USER nestjs
 
 EXPOSE 3001
 
-CMD ["yarn", "start:prod"]
+CMD ["node", "dist/src/main.js"]
