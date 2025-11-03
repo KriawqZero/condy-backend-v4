@@ -1,0 +1,68 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: condy-postgres-dev
+    environment:
+      POSTGRES_DB: condy-dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: devpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - condy-dev
+
+  # MinIO for AWS S3 simulation
+  minio:
+    image: minio/minio:latest
+    container_name: condy-minio-dev
+    environment:
+      MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
+      MINIO_SECRET_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      MINIO_REGION: us-east-1
+    ports:
+      - "9000:9000"  # API port
+      - "9001:9001"  # Console port
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - condy-dev
+
+  # MinIO Client (optional - for easy bucket creation)
+  minio-client:
+    image: minio/mc:latest
+    container_name: condy-mc-dev
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add condy-dev http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY;
+      /usr/bin/mc mb condy-dev/condy-bucket-dev;
+      /usr/bin/mc policy set public condy-dev/condy-bucket-dev;
+      echo 'MinIO bucket created and configured';
+      exit 0;
+      "
+    networks:
+      - condy-dev
+
+volumes:
+  postgres_data:
+  minio_data:
+
+networks:
+  condy-dev:
+    driver: bridge
