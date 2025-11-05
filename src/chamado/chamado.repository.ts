@@ -120,7 +120,7 @@ export class ChamadoRepository {
       },
     });
   }
- 
+
   async update(id: number, data: Partial<Chamado>): Promise<Chamado> {
     return await this.prisma.chamado.update({
       where: { id },

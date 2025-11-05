@@ -32,5 +32,3 @@ export class OrdemServicoRepository {
     return this.prisma.ordemServico.update({ where: { id }, data: { status } });
   }
 }
-
-

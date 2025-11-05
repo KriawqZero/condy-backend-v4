@@ -14,20 +14,12 @@ export class PropostaPrestadorController {
   }
 
   @Post(':id/aceitar')
-  async aceitar(
-    @Param('id') id: string,
-    @GetUser('id') prestadorId: string,
-    @Body() body: { valorAcordado?: string },
-  ) {
+  async aceitar(@Param('id') id: string, @GetUser('id') prestadorId: string, @Body() body: { valorAcordado?: string }) {
     return this.propostaService.aceitarProposta(Number(id), prestadorId, body?.valorAcordado);
   }
 
   @Post(':id/recusar')
-  async recusar(
-    @Param('id') id: string,
-    @GetUser('id') prestadorId: string,
-    @Body() body: { justificativa: string },
-  ) {
+  async recusar(@Param('id') id: string, @GetUser('id') prestadorId: string, @Body() body: { justificativa: string }) {
     return this.propostaService.recusarProposta(Number(id), prestadorId, body.justificativa);
   }
 
@@ -41,5 +33,3 @@ export class PropostaPrestadorController {
     return this.propostaService.contraproposta(Number(id), prestadorId, body);
   }
 }
-
-

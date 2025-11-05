@@ -10,12 +10,12 @@ export class OrdemServicoController {
   constructor(private readonly osService: OrdemServicoService) {}
 
   @Get()
-  async list(
-    @GetUser('id') prestadorId: string,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    return this.osService.listPrestador(prestadorId, page ? Number(page) : undefined, limit ? Number(limit) : undefined);
+  async list(@GetUser('id') prestadorId: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.osService.listPrestador(
+      prestadorId,
+      page ? Number(page) : undefined,
+      limit ? Number(limit) : undefined,
+    );
   }
 
   @Get(':id')
@@ -47,5 +47,3 @@ export class OrdemServicoController {
     return this.osService.criarOrdemAvulsa(prestadorId, body);
   }
 }
-
-

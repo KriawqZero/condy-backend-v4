@@ -1,4 +1,13 @@
-import { Body, Controller, Get, NotFoundException, Post, Query, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Post,
+  Query,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { JwtGuard } from 'src/common/guards/jwt.guard';
 import { UserType } from 'src/user/entities/user.entity';
@@ -9,7 +18,10 @@ import { AuthService } from 'src/auth/auth.service';
 @Controller('imovel')
 @UseGuards(JwtGuard)
 export class ImovelController {
-  constructor(private readonly imovelService: ImovelService, private readonly authService: AuthService) {}
+  constructor(
+    private readonly imovelService: ImovelService,
+    private readonly authService: AuthService,
+  ) {}
   @Post()
   async create(
     @Body() createImovelDto: CreateImovelDto,

@@ -43,7 +43,7 @@ export class PropostaService {
       }
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async tx => {
       // Atualiza proposta
       const updated = await tx.propostaServico.update({
         where: { id: proposta.id },
@@ -67,7 +67,11 @@ export class PropostaService {
       // Atualiza status do chamado
       await tx.chamado.update({
         where: { id: proposta.chamadoId },
-        data: { status: ChamadoStatus.EM_ATENDIMENTO, valorEstimado: new Prisma.Decimal(valorAcordado), prestadorAssignadoId: prestadorId },
+        data: {
+          status: ChamadoStatus.EM_ATENDIMENTO,
+          valorEstimado: new Prisma.Decimal(valorAcordado),
+          prestadorAssignadoId: prestadorId,
+        },
       });
 
       // Encerra outras propostas
@@ -114,27 +118,20 @@ export class PropostaService {
     });
   }
 
-  async adminDecidirContraproposta(
-    id: number,
-    adminId: string,
-    acao: 'aprovar' | 'recusar',
-    valorAcordado?: string,
-  ) {
+  async adminDecidirContraproposta(id: number, adminId: string, acao: 'aprovar' | 'recusar', valorAcordado?: string) {
     const admin = await this.userService.findById(adminId);
-    if (!admin || admin.userType !== UserType.ADMIN_PLATAFORMA)
-      throw new UnauthorizedException('Acesso negado');
+    if (!admin || admin.userType !== UserType.ADMIN_PLATAFORMA) throw new UnauthorizedException('Acesso negado');
 
     const proposta = await this.propostaRepo.findById(id);
     if (!proposta) throw new NotFoundException('Proposta não encontrada');
-    if (proposta.status !== PropostaStatus.CONTRAPROPOSTA_ENVIADA)
-      throw new BadRequestException('Estado inválido');
+    if (proposta.status !== PropostaStatus.CONTRAPROPOSTA_ENVIADA) throw new BadRequestException('Estado inválido');
 
     if (acao === 'recusar') {
       return this.propostaRepo.updateStatus(id, PropostaStatus.CONTRAPROPOSTA_RECUSADA);
     }
 
     // Aprovar contraproposta => criar OS e fechar demais
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async tx => {
       const updated = await tx.propostaServico.update({
         where: { id },
         data: { status: PropostaStatus.CONTRAPROPOSTA_APROVADA },
@@ -156,7 +153,9 @@ export class PropostaService {
       }
       if (updated.contrapropostaPrecoMax !== null && updated.contrapropostaPrecoMax !== undefined) {
         if (v > Number(updated.contrapropostaPrecoMax)) {
-          throw new BadRequestException(`Valor acordado acima do máximo permitido (${updated.contrapropostaPrecoMax}).`);
+          throw new BadRequestException(
+            `Valor acordado acima do máximo permitido (${updated.contrapropostaPrecoMax}).`,
+          );
         }
       }
 
@@ -206,7 +205,7 @@ export class PropostaService {
     }
 
     // Idempotência: unique (chamadoId, prestadorId) cobre duplicidade
-    const result = await this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async tx => {
       const created: any[] = [];
       for (const prestadorId of body.prestadores) {
         // Upsert manual para não depender de índice único no banco
@@ -253,5 +252,3 @@ export class PropostaService {
     return { sucesso: true, propostas: result };
   }
 }
-
-

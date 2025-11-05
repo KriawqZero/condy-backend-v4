@@ -28,7 +28,7 @@ export class OrdemServicoService {
     if (!os) throw new NotFoundException('OS não encontrada');
 
     // Transições simples: qualquer um dos três estados mas com sincronização do Chamado
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async tx => {
       const updated = await tx.ordemServico.update({ where: { id: os.id }, data: { status } });
 
       let novoStatusChamado: ChamadoStatus | null = null;
@@ -97,5 +97,3 @@ export class OrdemServicoService {
     return os;
   }
 }
-
-

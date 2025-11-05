@@ -7,5 +7,3 @@ import { PrismaModule } from 'src/database/prisma.module';
   controllers: [PrestadorController],
 })
 export class PrestadorModule {}
-
-

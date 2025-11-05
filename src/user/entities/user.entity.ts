@@ -1,4 +1,4 @@
-  import { JsonObject } from '@prisma/client/runtime/library';
+import { JsonObject } from '@prisma/client/runtime/library';
 import { UserInterface } from 'src/user/entities/user.interface';
 
 export interface SubsindicoInfo extends JsonObject {

@@ -9,11 +9,7 @@ export class PropostaAdminController {
   constructor(private readonly propostaService: PropostaService) {}
 
   @Post(':id/aprovar-contraproposta')
-  async aprovar(
-    @Param('id') id: string,
-    @GetUser('id') adminId: string,
-    @Body() body: { valorAcordado?: string },
-  ) {
+  async aprovar(@Param('id') id: string, @GetUser('id') adminId: string, @Body() body: { valorAcordado?: string }) {
     return this.propostaService.adminDecidirContraproposta(Number(id), adminId, 'aprovar', body?.valorAcordado);
   }
 
@@ -48,5 +44,3 @@ export class PropostaAdminController {
     });
   }
 }
-
-

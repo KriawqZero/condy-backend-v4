@@ -9,11 +9,7 @@ export class PrestadorController {
   constructor(private readonly prisma: PrismaService) {}
 
   @Get('dashboard')
-  async dashboard(
-    @GetUser('id') prestadorId: string,
-    @Query('from') from?: string,
-    @Query('to') to?: string,
-  ) {
+  async dashboard(@GetUser('id') prestadorId: string, @Query('from') from?: string, @Query('to') to?: string) {
     const fromDate = from ? new Date(from) : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const toDate = to ? new Date(to) : new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
 
@@ -56,5 +52,3 @@ export class PrestadorController {
     };
   }
 }
-
-

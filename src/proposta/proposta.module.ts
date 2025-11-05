@@ -14,5 +14,3 @@ import { ChamadoModule } from 'src/chamado/chamado.module';
   exports: [PropostaService],
 })
 export class PropostaModule {}
-
-

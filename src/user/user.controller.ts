@@ -12,13 +12,13 @@ export class UserController {
   @Get('prestadores')
   async listarPrestadores(@Query('q') q?: string) {
     const all = await this.userService.findAll();
-    const list = all.filter((u) => u.userType === UserType.PRESTADOR);
+    const list = all.filter(u => u.userType === UserType.PRESTADOR);
     if (!q) return list;
     const term = q.toLowerCase();
-    return list.filter((u) =>
+    return list.filter(u =>
       [u.name, u.email, u.cpfCnpj, u.whatsapp, u.nomeFantasia]
         .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(term)),
+        .some(v => String(v).toLowerCase().includes(term)),
     );
   }
 }
