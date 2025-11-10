@@ -2,14 +2,20 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { JwtGuard } from 'src/common/guards/jwt.guard';
 import { UserService } from './user.service';
 import { UserType } from './entities/user.entity';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 
 @Controller('user')
 @UseGuards(JwtGuard)
+@ApiTags('Usuários')
+@ApiBearerAuth('JWT-auth')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   // Lista prestadores (para admin atribuir em chamado)
   @Get('prestadores')
+  @ApiOperation({ summary: 'Listar prestadores cadastrados' })
+  @ApiQuery({ name: 'q', required: false, description: 'Filtro textual aplicado sobre campos relevantes.' })
+  @ApiOkResponse({ description: 'Lista de prestadores encontrada com sucesso.' })
   async listarPrestadores(@Query('q') q?: string) {
     const all = await this.userService.findAll();
     const list = all.filter(u => u.userType === UserType.PRESTADOR);

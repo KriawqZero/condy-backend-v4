@@ -8,6 +8,16 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+  ApiUnauthorizedResponse,
+  ApiNotFoundResponse,
+} from '@nestjs/swagger';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { JwtGuard } from 'src/common/guards/jwt.guard';
 import { UserType } from 'src/user/entities/user.entity';
@@ -17,12 +27,18 @@ import { AuthService } from 'src/auth/auth.service';
 
 @Controller('imovel')
 @UseGuards(JwtGuard)
+@ApiTags('Imóveis')
+@ApiBearerAuth('JWT-auth')
 export class ImovelController {
   constructor(
     private readonly imovelService: ImovelService,
     private readonly authService: AuthService,
   ) {}
   @Post()
+  @ApiOperation({ summary: 'Cadastrar imóvel' })
+  @ApiCreatedResponse({ description: 'Imóvel cadastrado com sucesso.' })
+  @ApiUnauthorizedResponse({ description: 'Somente administradores podem cadastrar imóveis.' })
+  @ApiNotFoundResponse({ description: 'Gestor informado não encontrado.' })
   async create(
     @Body() createImovelDto: CreateImovelDto,
     @GetUser('userType') userType: string,
@@ -41,6 +57,11 @@ export class ImovelController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Listar imóveis' })
+  @ApiQuery({ name: 'page', required: false, description: 'Número da página para paginação.' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Quantidade de itens por página.' })
+  @ApiOkResponse({ description: 'Lista de imóveis recuperada com sucesso.' })
+  @ApiUnauthorizedResponse({ description: 'Acesso restrito.' })
   findAll(
     @GetUser('userType') userType: string,
     @GetUser('id') userId: string,

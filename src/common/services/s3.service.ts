@@ -4,13 +4,14 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { extname } from 'path';
+import { LoggerService } from './logger.service';
 
 @Injectable()
 export class S3Service {
   private readonly s3: S3Client;
   private readonly bucket: string;
 
-  constructor() {
+  constructor(private readonly logger: LoggerService) {
     this.s3 = new S3Client({
       region: process.env.AWS_REGION,
       credentials: {
@@ -36,7 +37,7 @@ export class S3Service {
       await this.s3.send(command);
       return key;
     } catch (error) {
-      console.error(error);
+      this.logger.logError(error as Error, 'S3Service.uploadFile', { key, folder });
       throw new InternalServerErrorException('Erro ao enviar arquivo para S3');
     }
   }
@@ -50,7 +51,7 @@ export class S3Service {
     try {
       await this.s3.send(command);
     } catch (error) {
-      console.error(error);
+      this.logger.logError(error as Error, 'S3Service.deleteFile', { key });
       throw new InternalServerErrorException('Erro ao remover arquivo do S3');
     }
   }
@@ -64,7 +65,7 @@ export class S3Service {
     try {
       return await getSignedUrl(this.s3, command, { expiresIn: expiresInSeconds });
     } catch (error) {
-      console.error(error);
+      this.logger.logError(error as Error, 'S3Service.getSignedUrl', { key, expiresInSeconds });
       throw new InternalServerErrorException('Erro ao gerar URL assinada');
     }
   }

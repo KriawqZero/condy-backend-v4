@@ -4,10 +4,43 @@ import { ChamadoCreateInput } from 'src/chamado/entities/chamado.interface';
 import { ChamadoStatus, Escopo, Prioridade } from 'src/chamado/entities/types';
 import { paginate, ResponsePayloadWithMeta } from 'src/common/pagination';
 import { PrismaService } from 'src/database/prisma.service';
+import { Prisma } from '@prisma/client';
+import { DateUtils } from 'src/common/utils/date.utils';
 
 @Injectable()
 export class ChamadoRepository {
   constructor(private readonly prisma: PrismaService) {}
+
+  // Includes padrão para consultas de chamados
+  private readonly defaultIncludes = {
+    solicitante: true,
+    imovel: true,
+    prestadorAssignado: true,
+  } as const;
+
+  private readonly fullIncludes = {
+    solicitante: true,
+    imovel: true,
+    anexos: true,
+    prestadorAssignado: true,
+  } as const;
+
+  /**
+   * Método genérico para buscar chamados com paginação
+   */
+  private async findAllWithPagination(
+    where?: Prisma.ChamadoWhereInput,
+    include?: Prisma.ChamadoInclude,
+  ): Promise<ResponsePayloadWithMeta<Chamado[]>> {
+    return paginate(
+      () =>
+        this.prisma.chamado.findMany({
+          where,
+          include: include || this.defaultIncludes,
+        }),
+      () => this.prisma.chamado.count({ where }),
+    );
+  }
 
   async create(dto: Partial<ChamadoCreateInput>): Promise<Chamado> {
     return await this.prisma.chamado.create({
@@ -37,8 +70,8 @@ export class ChamadoRepository {
   }
 
   async countChamadosPorData(data: Date): Promise<number> {
-    const inicioDoDia = new Date(data.setHours(0, 0, 0, 0));
-    const fimDoDia = new Date(data.setHours(23, 59, 59, 999));
+    const inicioDoDia = DateUtils.startOfDay(data);
+    const fimDoDia = DateUtils.endOfDay(data);
 
     return await this.prisma.chamado.count({
       where: {
@@ -51,63 +84,21 @@ export class ChamadoRepository {
   }
 
   async findAll(): Promise<ResponsePayloadWithMeta<Chamado[]>> {
-    return paginate(
-      () =>
-        this.prisma.chamado.findMany({
-          include: {
-            solicitante: true,
-            imovel: true,
-            prestadorAssignado: true,
-          },
-        }),
-      () => this.prisma.chamado.count(),
-    );
+    return this.findAllWithPagination();
   }
 
   async findAllByPrestadorId(prestadorId: string): Promise<ResponsePayloadWithMeta<Chamado[]>> {
-    return paginate(
-      () =>
-        this.prisma.chamado.findMany({
-          where: {
-            prestadorAssignadoId: prestadorId,
-          },
-          include: {
-            solicitante: true,
-            imovel: true,
-            prestadorAssignado: true,
-          },
-        }),
-      () => this.prisma.chamado.count({ where: { prestadorAssignadoId: prestadorId } }),
-    );
+    return this.findAllWithPagination({ prestadorAssignadoId: prestadorId }, this.defaultIncludes);
   }
 
   async findAllByUserId(userId: string): Promise<ResponsePayloadWithMeta<Chamado[]>> {
-    return paginate(
-      () =>
-        this.prisma.chamado.findMany({
-          where: {
-            solicitanteId: userId,
-          },
-          include: {
-            solicitante: true,
-            imovel: true,
-            anexos: true,
-            prestadorAssignado: true,
-          },
-        }),
-      () => this.prisma.chamado.count(),
-    );
+    return this.findAllWithPagination({ solicitanteId: userId }, this.fullIncludes);
   }
 
   async findOneById(id: number): Promise<Chamado | null> {
     return await this.prisma.chamado.findUnique({
       where: { id },
-      include: {
-        solicitante: true,
-        imovel: true,
-        anexos: true,
-        prestadorAssignado: true,
-      },
+      include: this.fullIncludes,
     });
   }
 
@@ -133,11 +124,7 @@ export class ChamadoRepository {
         valorEstimado: (data as any).valorEstimado ?? undefined,
         prestadorAssignadoId: (data as any).prestadorAssignadoId ?? undefined,
       },
-      include: {
-        solicitante: true,
-        imovel: true,
-        anexos: true,
-      },
+      include: this.fullIncludes,
     });
   }
 }

@@ -1,0 +1,15 @@
+export const BUSINESS_RULES = {
+  PROPOSTA: {
+    MIN_VALOR_ACORDADO_FACTOR: 0.5,
+    MAX_VALOR_ACORDADO_FACTOR: 2.0,
+    VALOR_MIN: 0,
+  },
+  CHAMADO: {
+    CODIGO_PREFIX: 'CH',
+    SEQUENCIAL_PADDING: 4,
+  },
+  PAGINATION: {
+    DEFAULT_PAGE: 1,
+    DEFAULT_LIMIT: 10,
+  },
+} as const;

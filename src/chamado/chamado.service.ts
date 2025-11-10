@@ -7,6 +7,8 @@ import { User, UserType } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { CreateChamadoDto } from './dto/create-chamado.dto';
 import { UpdateChamadoDto } from './dto/update-chamado.dto';
+import { BUSINESS_RULES } from 'src/common/constants/business-rules.constants';
+import { DateUtils } from 'src/common/utils/date.utils';
 
 @Injectable()
 export class ChamadoService {
@@ -18,18 +20,14 @@ export class ChamadoService {
 
   async gerarCodigoChamado(): Promise<string> {
     const hoje = new Date();
-    const ano = hoje.getFullYear();
-    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-    const dia = String(hoje.getDate()).padStart(2, '0');
-
-    const dataStr = `${ano}${mes}${dia}`; // 20250614
+    const dataStr = DateUtils.formatDateToYYYYMMDD(hoje);
 
     // Busca quantos chamados já foram criados hoje
     const chamadosHoje = await this.chamadoRepository.countChamadosPorData(hoje);
 
-    const numeroSequencial = String(chamadosHoje + 1).padStart(4, '0'); // Ex: 0012
+    const numeroSequencial = DateUtils.padSequentialNumber(chamadosHoje + 1, BUSINESS_RULES.CHAMADO.SEQUENCIAL_PADDING);
 
-    return `CH-${dataStr}-${numeroSequencial}`;
+    return `${BUSINESS_RULES.CHAMADO.CODIGO_PREFIX}-${dataStr}-${numeroSequencial}`;
   }
 
   async create(createChamadoDto: CreateChamadoDto, solicitanteId: string) {
@@ -111,7 +109,7 @@ export class ChamadoService {
             whatsapp: prestador.whatsapp,
           }
         : null,
-    } as any;
+    };
   }
 
   async update(id: number, actorUserId: string, updateChamadoDto: UpdateChamadoDto) {

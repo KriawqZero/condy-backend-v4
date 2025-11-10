@@ -7,8 +7,10 @@ import { UserCreateInput } from 'src/user/entities/user.interface';
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findByEmail(email: string): Promise<User | null> {
-    const user = await this.prisma.user.findUnique({ where: { email } });
+  /**
+   * Formata um usuário do Prisma para o tipo User com subsindicoInfo parseado
+   */
+  private formatUser(user: any | null): User | null {
     if (!user) {
       return null;
     }
@@ -16,39 +18,26 @@ export class UserRepository {
       ...user,
       subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),
     };
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    return this.formatUser(user);
   }
 
   async findByCpfCnpj(cpfCnpj: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({ where: { cpfCnpj } });
-    if (!user) {
-      return null;
-    }
-    return {
-      ...user,
-      subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),
-    };
+    return this.formatUser(user);
   }
 
   async findById(id: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) {
-      return null;
-    }
-    return {
-      ...user,
-      subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),
-    };
+    return this.formatUser(user);
   }
 
   async findByPhone(phone: string): Promise<User | null> {
     const user = await this.prisma.user.findUnique({ where: { whatsapp: phone } });
-    if (!user) {
-      return null;
-    }
-    return {
-      ...user,
-      subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),
-    };
+    return this.formatUser(user);
   }
 
   async create(data: Partial<UserCreateInput>): Promise<User> {
@@ -87,24 +76,25 @@ export class UserRepository {
         dataNascimento: userData.dataNascimento ?? null,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         subsindicoInfo: data.subsindicoInfo ? (data.subsindicoInfo as any) : null,
+        status: userData.status,
+        periodoMandatoInicio: userData.periodoMandatoInicio,
+        periodoMandatoFim: userData.periodoMandatoFim,
+        nomeFantasia: userData.nomeFantasia,
+        razaoSocial: userData.razaoSocial,
+        cep: userData.cep,
+        endereco: userData.endereco,
+        cidade: userData.cidade,
+        uf: userData.uf,
       },
     });
 
-    return {
-      ...user,
-      subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),
-    };
+    return this.formatUser(user)!;
   }
 
   async findAll(userTypeQuery?: keyof typeof UserType): Promise<User[]> {
-    let users = await this.prisma.user.findMany();
-    if (userTypeQuery) {
-      users = users.filter(user => user.userType === userTypeQuery);
-    }
-    return users.map(user => ({
-      ...user,
-      subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),
-    }));
+    const where = userTypeQuery ? { userType: userTypeQuery } : undefined;
+    const users = await this.prisma.user.findMany({ where });
+    return users.map(user => this.formatUser(user)!).filter(Boolean);
   }
 
   async update(id: string, data: Partial<UserCreateInput>): Promise<User> {
@@ -125,13 +115,19 @@ export class UserRepository {
         dataNascimento: data.dataNascimento ?? existingUser.dataNascimento,
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         subsindicoInfo: data.subsindicoInfo ? (data.subsindicoInfo as any) : (existingUser.subsindicoInfo as any),
+        status: data.status ?? existingUser.status,
+        periodoMandatoInicio: data.periodoMandatoInicio ?? existingUser.periodoMandatoInicio,
+        periodoMandatoFim: data.periodoMandatoFim ?? existingUser.periodoMandatoFim,
+        nomeFantasia: data.nomeFantasia ?? existingUser.nomeFantasia,
+        razaoSocial: data.razaoSocial ?? existingUser.razaoSocial,
+        cep: data.cep ?? existingUser.cep,
+        endereco: data.endereco ?? existingUser.endereco,
+        cidade: data.cidade ?? existingUser.cidade,
+        uf: data.uf ?? existingUser.uf,
       },
     });
 
-    return {
-      ...user,
-      subsindicoInfo: this.parseSubsindicoInfo(user.subsindicoInfo),
-    };
+    return this.formatUser(user)!;
   }
 
   /**

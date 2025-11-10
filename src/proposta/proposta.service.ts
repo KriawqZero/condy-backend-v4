@@ -5,6 +5,7 @@ import { UserService } from 'src/user/user.service';
 import { UserType } from 'src/user/entities/user.entity';
 import { PropostaStatus, OrdemServicoStatus, ChamadoStatus, Prisma } from '@prisma/client';
 import { AuditService } from 'src/common/services/audit.service';
+import { BUSINESS_RULES } from 'src/common/constants/business-rules.constants';
 
 @Injectable()
 export class PropostaService {
@@ -19,6 +20,77 @@ export class PropostaService {
     return this.propostaRepo.listByPrestador(prestadorId);
   }
 
+  // Métodos privados de validação
+  private async validateAdminPermission(userId: string): Promise<void> {
+    const user = await this.userService.findById(userId);
+    if (!user || user.userType !== UserType.ADMIN_PLATAFORMA) {
+      throw new UnauthorizedException('Acesso negado');
+    }
+  }
+
+  private async validatePropostaForAction(
+    proposta: any,
+    expectedStatus: PropostaStatus,
+    actionName: string,
+  ): Promise<void> {
+    if (!proposta) {
+      throw new NotFoundException('Proposta não encontrada');
+    }
+    if (proposta.status !== expectedStatus) {
+      throw new BadRequestException(`Estado inválido para ${actionName}`);
+    }
+  }
+
+  private validateValorAcordado(
+    valorAcordado: string | undefined,
+    precoMin?: number | Prisma.Decimal | null,
+    precoMax?: number | Prisma.Decimal | null,
+  ): number {
+    if (!valorAcordado || isNaN(Number(valorAcordado)) || Number(valorAcordado) <= BUSINESS_RULES.PROPOSTA.VALOR_MIN) {
+      throw new BadRequestException('Valor acordado é obrigatório e deve ser numérico (> 0)');
+    }
+
+    const valor = Number(valorAcordado);
+
+    if (precoMin !== null && precoMin !== undefined) {
+      const minPermitido = Number(precoMin) * BUSINESS_RULES.PROPOSTA.MIN_VALOR_ACORDADO_FACTOR;
+      if (valor < minPermitido) {
+        throw new BadRequestException(`Valor acordado abaixo do mínimo permitido (${minPermitido}).`);
+      }
+    }
+
+    if (precoMax !== null && precoMax !== undefined) {
+      const maxPermitido = Number(precoMax);
+      if (valor > maxPermitido) {
+        throw new BadRequestException(`Valor acordado acima do máximo permitido (${maxPermitido}).`);
+      }
+    }
+
+    return valor;
+  }
+
+  private async createOrdemServicoData(
+    chamadoId: number,
+    prestadorId: string,
+    valorAcordado: string,
+    prazo?: number | null,
+  ) {
+    return {
+      chamadoId,
+      prestadorId,
+      status: OrdemServicoStatus.EM_ANDAMENTO,
+      valorAcordado: new Prisma.Decimal(valorAcordado),
+      prazoAcordado: prazo ?? null,
+    };
+  }
+
+  private async updateChamadoStatusData(status: ChamadoStatus, prestadorId?: string, valorEstimado?: string) {
+    const data: any = { status };
+    if (prestadorId) data.prestadorAssignadoId = prestadorId;
+    if (valorEstimado) data.valorEstimado = new Prisma.Decimal(valorEstimado);
+    return data;
+  }
+
   async aceitarProposta(id: number, prestadorId: string, valorAcordado?: string) {
     const proposta = await this.propostaRepo.findByIdForPrestador(id, prestadorId);
     if (!proposta) throw new NotFoundException('Proposta não encontrada');
@@ -30,18 +102,8 @@ export class PropostaService {
       throw new BadRequestException('Valor acordado é obrigatório e deve ser numérico (> 0)');
     }
 
-    const v = Number(valorAcordado);
-    if (proposta.precoSugeridoMin !== null && proposta.precoSugeridoMin !== undefined) {
-      const minPermitido = Number(proposta.precoSugeridoMin) * 0.5;
-      if (v < minPermitido) {
-        throw new BadRequestException(`Valor acordado abaixo do mínimo permitido (${minPermitido}).`);
-      }
-    }
-    if (proposta.precoSugeridoMax !== null && proposta.precoSugeridoMax !== undefined) {
-      if (v > Number(proposta.precoSugeridoMax)) {
-        throw new BadRequestException(`Valor acordado acima do máximo permitido (${proposta.precoSugeridoMax}).`);
-      }
-    }
+    // Valida o valor acordado usando o método extraído
+    this.validateValorAcordado(valorAcordado, proposta.precoSugeridoMin, proposta.precoSugeridoMax);
 
     return this.prisma.$transaction(async tx => {
       // Atualiza proposta
@@ -54,24 +116,20 @@ export class PropostaService {
       const existingOs = await tx.ordemServico.findUnique({ where: { chamadoId: proposta.chamadoId } });
       if (existingOs) throw new BadRequestException('Já existe OS para este chamado');
 
-      await tx.ordemServico.create({
-        data: {
-          chamadoId: proposta.chamadoId,
-          prestadorId: prestadorId,
-          status: OrdemServicoStatus.EM_ANDAMENTO,
-          valorAcordado: new Prisma.Decimal(valorAcordado),
-          prazoAcordado: proposta.prazoSugerido ?? null,
-        },
-      });
+      // Cria ordem de serviço
+      const ordemServicoData = await this.createOrdemServicoData(
+        proposta.chamadoId,
+        prestadorId,
+        valorAcordado,
+        proposta.prazoSugerido,
+      );
+      await tx.ordemServico.create({ data: ordemServicoData });
 
       // Atualiza status do chamado
+      const chamadoData = await this.updateChamadoStatusData(ChamadoStatus.EM_ATENDIMENTO, prestadorId, valorAcordado);
       await tx.chamado.update({
         where: { id: proposta.chamadoId },
-        data: {
-          status: ChamadoStatus.EM_ATENDIMENTO,
-          valorEstimado: new Prisma.Decimal(valorAcordado),
-          prestadorAssignadoId: prestadorId,
-        },
+        data: chamadoData,
       });
 
       // Encerra outras propostas
@@ -119,61 +177,55 @@ export class PropostaService {
   }
 
   async adminDecidirContraproposta(id: number, adminId: string, acao: 'aprovar' | 'recusar', valorAcordado?: string) {
-    const admin = await this.userService.findById(adminId);
-    if (!admin || admin.userType !== UserType.ADMIN_PLATAFORMA) throw new UnauthorizedException('Acesso negado');
+    // Valida permissão de admin
+    await this.validateAdminPermission(adminId);
 
+    // Busca e valida proposta
     const proposta = await this.propostaRepo.findById(id);
-    if (!proposta) throw new NotFoundException('Proposta não encontrada');
-    if (proposta.status !== PropostaStatus.CONTRAPROPOSTA_ENVIADA) throw new BadRequestException('Estado inválido');
+    await this.validatePropostaForAction(proposta, PropostaStatus.CONTRAPROPOSTA_ENVIADA, 'decisão de contraproposta');
 
+    // Se for recusa, apenas atualiza o status
     if (acao === 'recusar') {
       return this.propostaRepo.updateStatus(id, PropostaStatus.CONTRAPROPOSTA_RECUSADA);
     }
 
-    // Aprovar contraproposta => criar OS e fechar demais
+    // Aprova contraproposta com transação
+    return this.executeApprovalTransaction(id, proposta, valorAcordado);
+  }
+
+  private async executeApprovalTransaction(id: number, proposta: any, valorAcordado?: string) {
     return this.prisma.$transaction(async tx => {
+      // Atualiza status da proposta
       const updated = await tx.propostaServico.update({
         where: { id },
         data: { status: PropostaStatus.CONTRAPROPOSTA_APROVADA },
       });
 
+      // Verifica se já existe OS
       const existingOs = await tx.ordemServico.findUnique({ where: { chamadoId: updated.chamadoId } });
-      if (existingOs) throw new BadRequestException('Já existe OS para este chamado');
-
-      // Valor acordado é obrigatório na aprovação do admin
-      if (!valorAcordado || isNaN(Number(valorAcordado)) || Number(valorAcordado) <= 0) {
-        throw new BadRequestException('Valor acordado é obrigatório e deve ser numérico (> 0)');
-      }
-      const v = Number(valorAcordado);
-      if (updated.contrapropostaPrecoMin !== null && updated.contrapropostaPrecoMin !== undefined) {
-        const minPermitido = Number(updated.contrapropostaPrecoMin) * 0.5;
-        if (v < minPermitido) {
-          throw new BadRequestException(`Valor acordado abaixo do mínimo permitido (${minPermitido}).`);
-        }
-      }
-      if (updated.contrapropostaPrecoMax !== null && updated.contrapropostaPrecoMax !== undefined) {
-        if (v > Number(updated.contrapropostaPrecoMax)) {
-          throw new BadRequestException(
-            `Valor acordado acima do máximo permitido (${updated.contrapropostaPrecoMax}).`,
-          );
-        }
+      if (existingOs) {
+        throw new BadRequestException('Já existe OS para este chamado');
       }
 
-      await tx.ordemServico.create({
-        data: {
-          chamadoId: updated.chamadoId,
-          prestadorId: updated.prestadorId,
-          status: OrdemServicoStatus.EM_ANDAMENTO,
-          valorAcordado: new Prisma.Decimal(valorAcordado),
-          prazoAcordado: updated.contrapropostaPrazo ?? null,
-        },
-      });
+      // Valida valor acordado
+      this.validateValorAcordado(valorAcordado, updated.contrapropostaPrecoMin, updated.contrapropostaPrecoMax);
 
+      // Cria ordem de serviço
+      const ordemServicoData = await this.createOrdemServicoData(
+        updated.chamadoId,
+        updated.prestadorId,
+        valorAcordado!,
+        updated.contrapropostaPrazo,
+      );
+      await tx.ordemServico.create({ data: ordemServicoData });
+
+      // Atualiza status do chamado
       await tx.chamado.update({
         where: { id: updated.chamadoId },
-        data: { status: ChamadoStatus.EM_ATENDIMENTO, prestadorAssignadoId: updated.prestadorId },
+        data: await this.updateChamadoStatusData(ChamadoStatus.EM_ATENDIMENTO, updated.prestadorId),
       });
 
+      // Encerra outras propostas
       await tx.propostaServico.updateMany({
         where: { chamadoId: updated.chamadoId, NOT: { id: updated.id } },
         data: { status: PropostaStatus.PROPOSTA_RECUSADA },
@@ -194,15 +246,11 @@ export class PropostaService {
       mensagem?: string;
     },
   ) {
-    const admin = await this.userService.findById(adminId);
-    if (!admin || admin.userType !== UserType.ADMIN_PLATAFORMA) throw new UnauthorizedException('Acesso negado');
+    // Valida permissão de admin
+    await this.validateAdminPermission(adminId);
 
-    if (!body.chamadoId || !Array.isArray(body.prestadores) || body.prestadores.length === 0) {
-      throw new BadRequestException('chamadoId e prestadores são obrigatórios');
-    }
-    if (body.precoMin && body.precoMax && Number(body.precoMin) > Number(body.precoMax)) {
-      throw new BadRequestException('Faixa de preço inválida: mínimo maior que máximo');
-    }
+    // Valida dados de entrada
+    this.validateEnviarPropostasInput(body);
 
     // Idempotência: unique (chamadoId, prestadorId) cobre duplicidade
     const result = await this.prisma.$transaction(async tx => {
@@ -250,5 +298,19 @@ export class PropostaService {
     });
 
     return { sucesso: true, propostas: result };
+  }
+
+  private validateEnviarPropostasInput(body: {
+    chamadoId: number;
+    prestadores: string[];
+    precoMin?: string;
+    precoMax?: string;
+  }): void {
+    if (!body.chamadoId || !Array.isArray(body.prestadores) || body.prestadores.length === 0) {
+      throw new BadRequestException('chamadoId e prestadores são obrigatórios');
+    }
+    if (body.precoMin && body.precoMax && Number(body.precoMin) > Number(body.precoMax)) {
+      throw new BadRequestException('Faixa de preço inválida: mínimo maior que máximo');
+    }
   }
 }

@@ -11,6 +11,16 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { extname } from 'path';
 import { AnexoService } from 'src/anexo/anexo.service';
@@ -21,6 +31,8 @@ import { JwtGuard } from 'src/common/guards/jwt.guard';
 
 @Controller('anexo')
 @UseGuards(JwtGuard) // Assuming you want to protect this controller with JWT authentication
+@ApiTags('Anexos')
+@ApiBearerAuth('JWT-auth')
 export class AnexoController {
   constructor(private readonly anexoService: AnexoService) {}
 
@@ -43,6 +55,21 @@ export class AnexoController {
       },
     }),
   )
+  @ApiOperation({ summary: 'Enviar um novo anexo' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'Arquivo a ser enviado.',
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        title: { type: 'string', nullable: true },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiCreatedResponse({ description: 'Anexo enviado com sucesso.' })
+  @ApiNotFoundResponse({ description: 'Chamado relacionado não encontrado.' })
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
     @GetUser('id') userId: string,
@@ -56,21 +83,33 @@ export class AnexoController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Listar anexos do usuário autenticado' })
+  @ApiOkResponse({ description: 'Lista de anexos recuperada com sucesso.' })
   findAll(@GetUser('id') userId: string) {
     return this.anexoService.findAll(userId);
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Obter detalhes de um anexo' })
+  @ApiOkResponse({ description: 'Detalhes do anexo recuperados com sucesso.' })
+  @ApiNotFoundResponse({ description: 'Anexo não localizado.' })
   findOne(@Param('id') id: string) {
     return this.anexoService.findOne(+id);
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Atualizar informações de um anexo' })
+  @ApiBody({ type: UpdateAnexoDto })
+  @ApiOkResponse({ description: 'Anexo atualizado com sucesso.' })
+  @ApiNotFoundResponse({ description: 'Anexo não localizado.' })
   update(@Param('id') id: string, @GetUser('id') userId: string, @Body() updateAnexoDto: UpdateAnexoDto) {
     return this.anexoService.update(+id, userId, updateAnexoDto);
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Remover um anexo' })
+  @ApiOkResponse({ description: 'Anexo removido com sucesso.' })
+  @ApiNotFoundResponse({ description: 'Anexo não localizado.' })
   remove(@Param('id') id: string) {
     return this.anexoService.remove(+id);
   }
