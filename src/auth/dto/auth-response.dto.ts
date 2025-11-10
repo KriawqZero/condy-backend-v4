@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SubsindicoInfo, UserStatus, UserType } from 'src/user/entities/user.entity';
 
 export class SubsindicoInfoDto implements SubsindicoInfo {
+  [x: string]: import('@prisma/client/runtime/library').JsonValue | undefined;
   @ApiProperty({ description: 'Nome do subsíndico.' })
   nome: string;
 
