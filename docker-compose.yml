@@ -49,15 +49,21 @@ services:
       minio:
         condition: service_healthy
     entrypoint: >
-      /bin/sh -c "
-      /usr/bin/mc config host add condy-dev http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY;
-      /usr/bin/mc mb condy-dev/condy-bucket-dev;
-      /usr/bin/mc policy set public condy-dev/condy-bucket-dev;
-      echo 'MinIO bucket created and configured';
-      exit 0;
-      "
+      /bin/sh -c '
+      /usr/bin/mc alias set condy-dev http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY >/dev/null 2>&1 || true
+      if /usr/bin/mc ls condy-dev/condy-bucket-dev >/dev/null 2>&1; then
+        echo "Bucket condy-dev/condy-bucket-dev already exists. Ensuring policy..."
+        /usr/bin/mc anonymous set download condy-dev/condy-bucket-dev >/dev/null 2>&1 || true
+      else
+        /usr/bin/mc mb condy-dev/condy-bucket-dev
+        /usr/bin/mc anonymous set download condy-dev/condy-bucket-dev || true
+        echo "Bucket created and configured"
+      fi
+      exit 0
+      '
     networks:
       - condy-dev
+
 
 volumes:
   postgres_data:

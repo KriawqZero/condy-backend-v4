@@ -1,9 +1,9 @@
-import { ConflictException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/auth/dto/create-user-dto';
 import { LoginDto } from 'src/auth/dto/login.dto';
 import { HasherService } from 'src/common/services/hasher.service';
-import { UserType } from 'src/user/entities/user.entity';
+import { UserStatus, UserType } from 'src/user/entities/user.entity';
 import { UserRepository } from 'src/user/user.repository';
 
 @Injectable()
@@ -111,6 +111,18 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
     }
+
+    if (
+      [
+        UserStatus.INATIVO,
+        UserStatus.BLOQUEADO,
+        UserStatus.PENDENTE,
+        UserStatus.FALTA_DOCUMENTOS,
+      ].includes(user.status)
+    ) {
+      throw new ForbiddenException(`User is ${user.status.toLowerCase()}`);
+    }
+
 
     const isPasswordValid = await this.hasherService.comparePassword(dto.password, user.password);
     if (!isPasswordValid) {
