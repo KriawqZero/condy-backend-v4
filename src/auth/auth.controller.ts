@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UnauthorizedException, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -13,6 +13,7 @@ import {
 import { CreateUserDto } from 'src/auth/dto/create-user-dto';
 import { AuthResponseDto } from 'src/auth/dto/auth-response.dto';
 import { LoginDto } from 'src/auth/dto/login.dto';
+import { UpdateUserDto } from 'src/auth/dto/update-user.dto';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { JwtGuard } from 'src/common/guards/jwt.guard';
 import { UserType } from 'src/user/entities/user.entity';
@@ -88,6 +89,21 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'Acesso restrito a administradores.' })
   findOne(@GetUser('userType') userType: string, @Param('id') id: string) {
     if (userType == UserType.ADMIN_PLATAFORMA) return this.authService.findOne(id);
+    else throw new UnauthorizedException('Unauthorized access');
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Atualizar usuário',
+    description: 'Disponível apenas para administradores da plataforma.',
+  })
+  @ApiBody({ type: UpdateUserDto })
+  @ApiOkResponse({ description: 'Usuário atualizado com sucesso.' })
+  @ApiUnauthorizedResponse({ description: 'Acesso restrito a administradores.' })
+  update(@GetUser('userType') userType: string, @Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    if (userType == UserType.ADMIN_PLATAFORMA) return this.authService.update(id, updateUserDto);
     else throw new UnauthorizedException('Unauthorized access');
   }
 

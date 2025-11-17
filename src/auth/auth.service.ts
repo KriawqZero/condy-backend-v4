@@ -3,13 +3,16 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/auth/dto/create-user-dto';
 import { LoginDto } from 'src/auth/dto/login.dto';
+import { UpdateUserDto } from 'src/auth/dto/update-user.dto';
 import { HasherService } from 'src/common/services/hasher.service';
-import { UserStatus, UserType } from 'src/user/entities/user.entity';
+import { User, UserStatus, UserType } from 'src/user/entities/user.entity';
+import { UserCreateInput } from 'src/user/entities/user.interface';
 import { UserRepository } from 'src/user/user.repository';
 
 @Injectable()
@@ -20,22 +23,29 @@ export class AuthService {
     private readonly hasherService: HasherService,
   ) {}
 
-  /**
-   * Generates a JWT token for the user.
-   * @param userId - The ID of the user.
-   * @param userType - The type of the user (e.g., 'admin', 'user').
-   * @returns A signed JWT token.
-   */
   private async signToken(userId: string, userEmail: string, userType: string): Promise<string> {
     const payload = { id: userId, email: userEmail, userType };
     return await this.jwtService.signAsync(payload);
   }
 
-  /**
-   * Checks if the email already exists in the database.
-   * @param email - The email to check.
-   * @returns True if the email exists, false otherwise.
-   */
+  private mapUserResponse(user: User) {
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      userType: user.userType,
+      cpfCnpj: user.cpfCnpj,
+      whatsapp: user.whatsapp,
+      dataNascimento: user.dataNascimento,
+      subsindicoInfo: user.subsindicoInfo,
+      status: user.status,
+      periodoMandatoInicio: user.periodoMandatoInicio,
+      periodoMandatoFim: user.periodoMandatoFim,
+      nomeFantasia: user.nomeFantasia,
+      razaoSocial: user.razaoSocial,
+    };
+  }
+
   async checkEmailExists(email: string): Promise<boolean> {
     const user = await this.userRepository.findByEmail(email);
     return user !== null;
@@ -93,21 +103,7 @@ export class AuthService {
     }
 
     return {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        userType: user.userType,
-        cpfCnpj: user.cpfCnpj,
-        whatsapp: user.whatsapp,
-        dataNascimento: user.dataNascimento,
-        subsindicoInfo: user.subsindicoInfo,
-        status: user.status,
-        periodoMandatoInicio: user.periodoMandatoInicio,
-        periodoMandatoFim: user.periodoMandatoFim,
-        nomeFantasia: user.nomeFantasia,
-        razaoSocial: user.razaoSocial,
-      },
+      user: this.mapUserResponse(user),
       token: token,
     };
   }
@@ -132,21 +128,7 @@ export class AuthService {
     const token = await this.signToken(user.id, user.email, user.userType);
 
     return {
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        userType: user.userType,
-        cpfCnpj: user.cpfCnpj,
-        whatsapp: user.whatsapp,
-        dataNascimento: user.dataNascimento,
-        subsindicoInfo: user.subsindicoInfo,
-        status: user.status,
-        periodoMandatoInicio: user.periodoMandatoInicio,
-        periodoMandatoFim: user.periodoMandatoFim,
-        nomeFantasia: user.nomeFantasia,
-        razaoSocial: user.razaoSocial,
-      },
+      user: this.mapUserResponse(user),
       token: token,
     };
   }
@@ -157,6 +139,48 @@ export class AuthService {
 
   async findOne(id: string) {
     return await this.userRepository.findById(id);
+  }
+
+  async update(id: string, dto: UpdateUserDto) {
+    const existingUser = await this.userRepository.findById(id);
+    if (!existingUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (dto.email && dto.email !== existingUser.email) {
+      const userByEmail = await this.userRepository.findByEmail(dto.email);
+      if (userByEmail && userByEmail.id !== id) {
+        throw new ConflictException('Email already exists');
+      }
+    }
+
+    if (dto.cpfCnpj && dto.cpfCnpj !== existingUser.cpfCnpj) {
+      const userByCpfCnpj = await this.userRepository.findByCpfCnpj(dto.cpfCnpj);
+      if (userByCpfCnpj && userByCpfCnpj.id !== id) {
+        throw new ConflictException('CPF/CNPJ already exists');
+      }
+    }
+
+    if (dto.whatsapp && dto.whatsapp !== existingUser.whatsapp) {
+      const userByPhone = await this.userRepository.findByPhone(dto.whatsapp);
+      if (userByPhone && userByPhone.id !== id) {
+        throw new ConflictException('Phone number already exists');
+      }
+    }
+
+    const { password, ...rest } = dto;
+
+    const updatePayload: Partial<UserCreateInput> = {
+      ...rest,
+    };
+
+    if (password) {
+      updatePayload.password = await this.hasherService.hashPassword(password);
+    }
+
+    const updatedUser = await this.userRepository.update(id, updatePayload);
+
+    return this.mapUserResponse(updatedUser);
   }
 
   /*   remove(id: string) {
