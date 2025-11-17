@@ -130,6 +130,17 @@ export class UserRepository {
     return this.formatUser(user)!;
   }
 
+  async remove(id: string): Promise<void> {
+    const existingUser = await this.findById(id);
+    if (!existingUser) {
+      throw new BadRequestException('User not found');
+    }
+
+    await this.prisma.user.delete({
+      where: { id },
+    });
+  }
+
   /**
    * Converte o valor do banco de dados para o tipo SubsindicoInfo
    */

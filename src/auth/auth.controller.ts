@@ -1,9 +1,24 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
   ApiConflictResponse,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
@@ -107,13 +122,29 @@ export class AuthController {
     else throw new UnauthorizedException('Unauthorized access');
   }
 
-  /*   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(id, updateAuthDto);
-  } */
+  @Delete(':id')
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth('JWT-auth')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Excluir usuário',
+    description: 'Disponível apenas para administradores da plataforma.',
+  })
+  @ApiNoContentResponse({ description: 'Usuário removido com sucesso.' })
+  @ApiUnauthorizedResponse({ description: 'Acesso restrito a administradores.' })
+  async remove(@GetUser() user: Record<string, unknown>, @Param('id') id: string) {
+    const userType = user?.['userType'] as string | undefined;
+    const userId = user?.['id'] as string | undefined;
 
-  /*   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(id);
-  } */
+    if (userType !== UserType.ADMIN_PLATAFORMA) {
+      throw new UnauthorizedException('Unauthorized access');
+    }
+
+    if (userId === id) {
+      throw new BadRequestException('Não é possível excluir o próprio usuário autenticado.');
+    }
+
+    await this.authService.remove(id);
+    return;
+  }
 }

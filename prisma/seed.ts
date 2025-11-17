@@ -4,13 +4,14 @@
     - yarn seed
 */
 
-import { PrismaClient, UserType } from '@prisma/client';
+import { PrismaClient, UserStatus, UserType } from '@prisma/client';
 const bcrypt = require('bcrypt');
 
 const prisma = new PrismaClient();
 
 async function upsertUser(data: {
   name: string;
+  status?: keyof typeof UserStatus;
   email: string;
   password: string;
   cpfCnpj: string;
@@ -29,6 +30,7 @@ async function upsertUser(data: {
       whatsapp: data.whatsapp,
       userType: data.userType,
       password: hashed,
+      status: data.status ?? 'PENDENTE',
       dataNascimento: data.dataNascimento ? new Date(data.dataNascimento) : null,
       periodoMandatoInicio: data.periodoMandatoInicio ? new Date(data.periodoMandatoInicio) : null,
       periodoMandatoFim: data.periodoMandatoFim ? new Date(data.periodoMandatoFim) : null,
@@ -40,6 +42,7 @@ async function upsertUser(data: {
       whatsapp: data.whatsapp,
       userType: data.userType,
       password: hashed,
+      status: data.status,
       dataNascimento: data.dataNascimento ? new Date(data.dataNascimento) : null,
       periodoMandatoInicio: data.periodoMandatoInicio ? new Date(data.periodoMandatoInicio) : null,
       periodoMandatoFim: data.periodoMandatoFim ? new Date(data.periodoMandatoFim) : null,
@@ -78,6 +81,7 @@ async function main() {
     cpfCnpj: '60185344000144',
     whatsapp: '11900000000',
     userType: 'ADMIN_PLATAFORMA',
+    status: 'ATIVO',
   });
 
   // Prestador
@@ -88,7 +92,7 @@ async function main() {
     userType: 'PRESTADOR',
     cpfCnpj: '06676429195',
     whatsapp: '11987624120',
-    dataNascimento: '1985-05-15',
+    dataNascimento: '1985-05-15'
   });
 
   // Síndico (profissional conforme payload)
@@ -101,7 +105,7 @@ async function main() {
     whatsapp: '11987624121',
     dataNascimento: '1985-05-15',
     periodoMandatoInicio: '2024-01-01',
-    periodoMandatoFim: '2025-12-31',
+    periodoMandatoFim: '2025-12-31'
   });
 
   await createImovelParaGestor(sindico.id);

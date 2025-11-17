@@ -183,7 +183,7 @@ export class AuthService {
     return this.mapUserResponse(updatedUser);
   }
 
-  /*   remove(id: string) {
-    return this.userRepository.remove(id);
-  } */
+  async remove(id: string) {
+    await this.userRepository.remove(id);
+  }
 }
