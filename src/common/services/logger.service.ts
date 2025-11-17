@@ -56,5 +56,3 @@ export class LoggerService implements NestLoggerService {
     console.log('[EVENT]', JSON.stringify(eventInfo, null, 2));
   }
 }
-
-

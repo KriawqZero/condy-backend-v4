@@ -65,5 +65,3 @@ export class HttpExceptionFilter implements ExceptionFilter {
     return 'Erro desconhecido';
   }
 }
-
-

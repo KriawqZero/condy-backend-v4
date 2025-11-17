@@ -34,5 +34,3 @@ export class DateUtils {
     return String(number).padStart(padding, '0');
   }
 }
-
-
